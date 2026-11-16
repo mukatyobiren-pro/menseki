@@ -1,0 +1,3870 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>✂ めんせき ─ きって うごかして かんがえよう</title>
+  
+  <!-- アプリとして使うための設定(ホーム画面に追加すると全画面で開く) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="めんせき">
+  <meta name="theme-color" content="#2c6e63">
+
+  <style>
+    :root {
+      --bg-color: #e9f0ec;
+      --text-color: #1d2b2a;
+      --card-bg: #ffffff;
+      --btn-bg: #dbe8e1;
+      --btn-border: #a8c4b5;
+      --accent-blue: #0b5e8e;
+      --board-bg: #2c6e63;
+      --board-border: #1f4f47;
+      --font-family: "Zen Maru Gothic", "BIZ UDPGothic", "Hiragino Maru Gothic ProN", "Noto Sans JP", sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #15201e;
+        --text-color: #eaf2ef;
+        --card-bg: #1e2d2a;
+        --btn-bg: #2b3e39;
+        --btn-border: #3f5952;
+        --accent-blue: #6cc0ec;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    body {
+      margin: 0;
+      padding: 12px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-family);
+      font-size: 18px;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      transition: padding-top 0.2s ease;
+    }
+
+    body.pen-on {
+      padding-top: 76px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    /* --------------------------------------------------
+       0. 上部固定ペンの道具バー
+    -------------------------------------------------- */
+    #pen-tab {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: rgba(255, 255, 255, 0.97);
+      border-bottom: 2px solid var(--btn-border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 16px;
+      white-space: nowrap;
+      overflow-x: auto;
+    }
+
+    .pen-tab-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0b5e8e;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-pen-color {
+      width: 44px !important;
+      height: 44px !important;
+      min-height: 44px !important;
+      border-radius: 50%;
+      padding: 0 !important;
+      font-size: 20px !important;
+      font-weight: bold;
+      border: 3px solid #a8c4b5;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+    }
+
+    .btn-pen-color.selected {
+      border: 4px solid #0b5e8e !important;
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    }
+
+    .btn-pen-width,
+    #btn-eraser,
+    #btn-clear-pen,
+    #btn-pen-off {
+      min-height: 44px !important;
+      font-size: 15px !important;
+      padding: 4px 12px !important;
+    }
+
+    #btn-pen-off {
+      background: #e2e3e5;
+      border-color: #b0b3b8;
+      color: #383d41;
+      margin-left: 8px;
+    }
+
+    /* ボタン共通 */
+    button {
+      font-family: var(--font-family);
+      font-weight: 700;
+      border: 2px solid var(--btn-border);
+      background-color: var(--btn-bg);
+      color: var(--text-color);
+      border-radius: 12px;
+      cursor: pointer;
+      padding: 8px 16px;
+      min-height: 50px;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+      transition: transform 0.05s, box-shadow 0.05s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.15);
+    }
+
+    button.on {
+      background-color: #0b5e8e;
+      color: #ffffff;
+      border-color: #053654;
+    }
+
+    /* --------------------------------------------------
+       1. スタート画面
+    -------------------------------------------------- */
+    #start-screen {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .app-title {
+      text-align: center;
+      font-size: 30px;
+      margin: 10px 0 24px 0;
+      font-weight: 700;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      border-left: 8px solid var(--accent-blue);
+      padding-left: 12px;
+      margin: 20px 0 12px 0;
+    }
+
+    .intro-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 2px solid var(--btn-border);
+      margin-bottom: 24px;
+    }
+
+    .intro-card:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .intro-card-thumbs {
+      background: var(--board-bg);
+      border-radius: 12px;
+      padding: 6px;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .intro-card-thumbs svg {
+      width: 84px;
+      height: 64px;
+    }
+
+    .intro-card-text {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .shape-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 16px;
+      width: 100%;
+    }
+
+    .shape-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 2px solid var(--btn-border);
+      min-width: 180px;
+    }
+
+    .shape-card:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .shape-card-board {
+      background: var(--board-bg);
+      border-radius: 12px;
+      width: 150px;
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .shape-card-name {
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    /* --------------------------------------------------
+       2. 学習画面
+    -------------------------------------------------- */
+    #learn-screen {
+      width: 100%;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .top-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .btn-settings-toggle {
+      font-size: 12px;
+      min-height: 32px;
+      padding: 4px 10px;
+      opacity: 0.5;
+    }
+
+    .btn-settings-toggle:hover, .btn-settings-toggle:focus {
+      opacity: 1;
+    }
+
+    .controls-container {
+      width: 100%;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px;
+      justify-content: flex-start;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 1279px) {
+      .controls-container {
+        flex-wrap: wrap;
+      }
+    }
+
+    .control-group {
+      background: rgba(255, 255, 255, 0.6);
+      border: 2px solid var(--btn-border);
+      border-radius: 16px;
+      padding: 4px;
+      display: flex;
+      gap: 4px;
+      position: relative;
+      align-items: center;
+    }
+
+    .control-group-reset {
+      margin-left: auto;
+    }
+
+    .controls-container button {
+      white-space: nowrap;
+      font-size: clamp(12px, 1.15vw, 16px);
+      padding: 6px clamp(6px, 0.8vw, 12px);
+      min-height: 48px;
+    }
+
+    button#btn-reset {
+      font-size: 13px;
+      min-height: 44px;
+      opacity: 0.85;
+    }
+
+    button#btn-redo:disabled,
+    button#btn-redo.disabled {
+      opacity: 0.4;
+    }
+
+    /* ほかの図形を選ぶポップアップ窓 */
+    .other-picker-popover {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      transform: none;
+      margin-top: 8px;
+      background: var(--card-bg);
+      border: 3px solid var(--btn-border);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      z-index: 200;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      min-width: 320px;
+    }
+
+    .btn-picker-item {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      font-size: 16px;
+      padding: 8px 12px;
+      min-height: 48px;
+      background: var(--btn-bg);
+      border: 2px solid var(--btn-border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .btn-picker-item:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .picker-color-box {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1px solid rgba(0,0,0,0.3);
+      flex-shrink: 0;
+    }
+
+    /* キャンバスビューポート & キャンバスエリア */
+    .canvas-wrapper {
+      width: calc(100% - 16px);
+      margin: 0 8px 12px 8px;
+      position: relative;
+    }
+
+    #board-viewport {
+      width: 100%;
+      overflow: hidden;
+      border-radius: 12px;
+      position: relative;
+      touch-action: none;
+      box-shadow: 0 0 0 8px var(--board-border), 0 12px 26px rgba(0,0,0,0.3);
+    }
+
+    canvas#mainCanvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      background-color: var(--board-bg);
+      border-radius: 12px;
+      touch-action: none;
+      transform-origin: 0 0;
+    }
+
+    canvas#mainCanvas.pen-active {
+      cursor: crosshair;
+    }
+
+    /* ビューポート右上 ズームリセットボタン */
+    #btn-reset-view {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 250;
+      background: rgba(255, 255, 255, 0.95);
+      color: #1d2b2a;
+      border: 2px solid var(--btn-border);
+      height: 44px;
+      border-radius: 10px;
+      font-size: 15px;
+      padding: 0 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    /* 削除メニュー (長押し・右クリック用) */
+    .shape-menu-popover {
+      position: absolute;
+      background: #ffffff;
+      border: 3px solid var(--btn-border);
+      border-radius: 16px;
+      padding: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 300;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-shape-menu-delete {
+      background: #dc3545;
+      color: #ffffff;
+      border: 2px solid #bd2130;
+      border-radius: 10px;
+      font-size: 16px;
+      padding: 8px 16px;
+      min-height: 48px;
+      font-weight: 700;
+    }
+
+    .btn-shape-menu-delete:active {
+      background: #bd2130;
+    }
+
+    .btn-shape-menu-cancel {
+      background: var(--btn-bg);
+      color: var(--text-color);
+      border: 2px solid var(--btn-border);
+      border-radius: 10px;
+      font-size: 16px;
+      padding: 8px 16px;
+      min-height: 48px;
+      font-weight: 700;
+    }
+
+    /* 面積札 */
+    .area-badge {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      color: #1d2b2a;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 26px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      pointer-events: none;
+      z-index: 10;
+      max-width: calc(100% - 40px);
+      border: 2px solid #F2A33A;
+    }
+
+    /* 方眼の上に出る おしらせ */
+    .board-toast {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: calc(100% - 120px);
+      background: rgba(255, 255, 255, 0.96);
+      color: #1d2b2a;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: 700;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      border: 2px solid #0b5e8e;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    /* --------------------------------------------------
+       3. ヒント窓 (ドラッグ可能)
+    -------------------------------------------------- */
+    #hint-window {
+      position: fixed;
+      top: 84px;
+      right: 20px;
+      width: min(340px, 44vw);
+      background: var(--card-bg);
+      border: 3px solid var(--btn-border);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: top 0.2s ease;
+    }
+
+    body.pen-on #hint-window {
+      top: 148px;
+    }
+
+    .hint-header {
+      background: var(--btn-bg);
+      padding: 10px 12px;
+      cursor: move;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      border-bottom: 2px solid var(--btn-border);
+      touch-action: none;
+    }
+
+    .hint-title-area {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hint-title-sub {
+      font-size: 11px;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+
+    .btn-close-hint {
+      min-height: 32px;
+      padding: 2px 8px;
+      font-size: 14px;
+      box-shadow: none;
+    }
+
+    .hint-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .message-box {
+      background: rgba(0,0,0,0.05);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 15px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .hint-section-label {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .hint-shape-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .btn-hint-shape {
+      min-height: 36px;
+      font-size: 13px;
+      padding: 4px 8px;
+      justify-content: flex-start;
+      border-width: 2px;
+      color: #1d2b2a;
+    }
+
+    .btn-hint-shape.on {
+      border: 3px solid #1d2b2a !important;
+      font-weight: 700;
+    }
+
+    .hint-level-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn-hint-level {
+      min-height: 40px;
+      font-size: 14px;
+      justify-content: flex-start;
+      color: #1d2b2a;
+    }
+
+    .btn-hint-level.on {
+      border: 3px solid #1d2b2a;
+    }
+
+    .hint-text-box {
+      font-size: 21px;
+      line-height: 1.7;
+      padding: 12px;
+      border-radius: 12px;
+      border: 3px solid var(--btn-border);
+      font-weight: 700;
+      color: #1d2b2a;
+    }
+
+    /* --------------------------------------------------
+       4. 設定パネル
+    -------------------------------------------------- */
+    #settings-panel {
+      width: calc(100% - 16px);
+      max-width: 800px;
+      background: var(--card-bg);
+      border: 3px solid var(--btn-border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+
+    .settings-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--btn-border);
+    }
+
+    .settings-shape-name {
+      font-weight: 700;
+      width: 140px;
+    }
+
+    .settings-inputs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .setting-field {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 15px;
+    }
+
+    .setting-field input {
+      width: 60px;
+      padding: 6px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid var(--btn-border);
+      text-align: center;
+      font-family: var(--font-family);
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .settings-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    /* 設定パネルの保存ステータス表示 */
+    .settings-status {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .settings-status.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .settings-status.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .settings-status.info {
+      background-color: #e2e3e5;
+      color: #383d41;
+      border: 1px solid #d6d8db;
+    }
+
+    /* 配布用コードエリア */
+    .code-export-area {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.03);
+      border: 2px dashed var(--btn-border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .code-export-area textarea {
+      width: 100%;
+      height: 60px;
+      font-family: monospace;
+      font-size: 13px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--btn-border);
+      resize: none;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    .code-export-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* --------------------------------------------------
+       5. 大きさをきめるダイアログ (モーダル窓)
+    -------------------------------------------------- */
+    #size-dialog-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    #size-dialog {
+      background: #ffffff;
+      color: #1d2b2a;
+      border: 4px solid var(--btn-border);
+      border-radius: 24px;
+      padding: 20px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 501;
+    }
+
+    .size-dialog-title {
+      font-size: 22px;
+      font-weight: 700;
+      text-align: center;
+      margin: 0;
+    }
+
+    .size-dialog-preview {
+      background: var(--board-bg);
+      border-radius: 16px;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
+      padding: 10px;
+    }
+
+    .size-dialog-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .size-control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(0,0,0,0.03);
+      padding: 8px 12px;
+      border-radius: 14px;
+    }
+
+    .size-control-label {
+      font-size: 18px;
+      font-weight: 700;
+      min-width: 100px;
+    }
+
+    .size-control-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-size-step {
+      width: 50px;
+      height: 50px;
+      min-height: 50px;
+      font-size: 26px;
+      padding: 0;
+      border-radius: 12px;
+      line-height: 1;
+    }
+
+    .btn-size-step:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .size-control-value {
+      font-size: 24px;
+      font-weight: 700;
+      min-width: 70px;
+      text-align: center;
+    }
+
+    .size-dialog-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .btn-size-add {
+      background: #0b5e8e;
+      color: #ffffff;
+      border: 3px solid #053654;
+      font-size: 22px;
+      height: 58px;
+      border-radius: 16px;
+      width: 100%;
+    }
+
+    .size-dialog-sub-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-size-sub {
+      flex: 1;
+      font-size: 16px;
+      height: 48px;
+      border-radius: 12px;
+    }
+
+    /* ==================================================
+       1人1台端末(Chromebook)向けの調整
+    ================================================== */
+    body { padding: 8px 12px; }
+    body.pen-on { padding-top: 72px; }
+    .controls-container { margin-bottom: 8px; }
+
+    /* よく使うボタン:大きく目立たせる */
+    .controls-container button.btn-main {
+      font-size: clamp(14px, 1.25vw, 18px);
+      min-height: 54px;
+      padding: 6px clamp(5px, 0.5vw, 10px);
+      background-color: #ffffff;
+      color: #1d2b2a;
+      border-width: 3px;
+    }
+    .controls-container button.btn-main.on {
+      background-color: #0b5e8e; color: #ffffff; border-color: #053654;
+    }
+    /* 先生が使うことの多いボタン:小さめ */
+    .controls-container button.btn-sub {
+      font-size: 12px;
+      min-height: 40px;
+      padding: 4px 6px;
+      opacity: 0.85;
+    }
+
+    /* 方眼と横のボタンを並べる */
+    .board-row {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .board-row .canvas-wrapper { width: 100%; max-width: 100%; margin: 8px; }
+
+    /* 画面下のバー:ボタンを 1れつに ならべて、方眼を できるだけ 大きく する */
+    .bottom-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .controls-container #btn-home { flex-shrink: 0; }
+    .bottom-bar .btn-settings-toggle { flex-shrink: 0; white-space: nowrap; }
+    .bottom-bar .page-title {
+      flex: 0 1 auto; min-width: 0; font-size: 15px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.85;
+    }
+    .bottom-buttons {
+      flex: 1 0 auto;
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
+      gap: 8px;
+    }
+    .bottom-buttons button { font-size: 15px; min-height: 46px; padding: 4px 12px; white-space: nowrap; }
+    .bottom-buttons #btn-toggle-area,
+    .bottom-buttons #btn-toggle-hint { font-size: 16px; border-width: 3px; }
+
+    /* せまい 画面:ボタンを 2だん目に おくる */
+    @media (max-width: 979px) {
+      .bottom-bar { flex-wrap: wrap; }
+      .bottom-bar .page-title { flex: 1 1 0; text-align: center; }
+      .bottom-buttons { order: 5; flex: 1 1 100%; flex-wrap: wrap; }
+    }
+
+    /* 白い 窓の 中の ボタンは、ダークモードでも 明るい 色に する */
+    #pen-tab button:not(.btn-pen-color):not(.on),
+    #size-dialog button:not(.btn-size-add),
+    #hint3-lock button,
+    .btn-shape-menu-cancel {
+      background-color: #dbe8e1;
+      border-color: #a8c4b5;
+      color: #1d2b2a;
+    }
+    #pen-tab #btn-pen-off { background: #e2e3e5; border-color: #b0b3b8; color: #383d41; }
+
+    /* えらんだ ヒントの ボタンは、色つきの 地に 黒い 字の まま */
+    .btn-hint-level.on, .btn-hint-shape.on { color: #1d2b2a; }
+
+    /* せまい 画面でも ペンの 道具が つぶれない・左が 切れない */
+    #pen-tab { justify-content: flex-start; }
+    #pen-tab > * { flex-shrink: 0; }
+    #pen-tab > :first-child { margin-left: auto; }
+    #pen-tab > :last-child { margin-right: auto; }
+
+    /* ヒント3の かぎ */
+    #btn-hint3.locked { background: #e2e3e5 !important; color: #4a4f55; border-style: dashed; }
+    #hint3-lock-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 650; display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    #hint3-lock {
+      background: #fff; color: #1d2b2a; border: 4px solid var(--btn-border); border-radius: 24px;
+      padding: 20px; width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 12px;
+      text-align: center; box-shadow: 0 16px 36px rgba(0,0,0,0.3);
+    }
+    #hint3-lock .hl-title { font-size: 19px; font-weight: 700; }
+    #hint3-lock .hl-sub { font-size: 15px; font-weight: 700; opacity: 0.8; }
+    #hint3-lock .hl-dots { font-size: 34px; letter-spacing: 12px; min-height: 48px; font-weight: 700; }
+    #hint3-lock .hl-msg { font-size: 16px; font-weight: 700; min-height: 22px; color: #8a4a12; }
+    #hint3-lock .hl-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    #hint3-lock .hl-pad button { font-size: 24px; min-height: 56px; }
+    #hint3-lock .hl-close { min-height: 48px; font-size: 17px; }
+
+    /* 「さいしょから」の確認窓 */
+    #reset-confirm-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 600; display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    #reset-confirm {
+      background: #ffffff; color: #1d2b2a; border: 4px solid var(--btn-border);
+      border-radius: 24px; padding: 24px; max-width: 440px; width: 100%;
+      display: flex; flex-direction: column; gap: 18px; text-align: center;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.3);
+    }
+    #reset-confirm .rc-title { font-size: 24px; font-weight: 700; }
+    #reset-confirm .rc-sub { font-size: 16px; font-weight: 700; opacity: 0.8; }
+    #reset-confirm .rc-btns { display: flex; gap: 12px; }
+    #reset-confirm .rc-btns button { flex: 1; font-size: 20px; min-height: 58px; }
+    #btn-reset-yes { background: #fbe3d6; border-color: #c96a3a; color: #1d2b2a; }
+    #btn-reset-no { background: #0b5e8e; color: #fff; border-color: #053654; }
+  </style>
+</head>
+<body>
+
+  <!-- 上部固定ペンの道具バー -->
+  <div id="pen-tab" hidden>
+    <div class="pen-tab-label">✏ ペンモード</div>
+    <button class="btn-pen-color selected" data-color="#FFE14D" style="background-color:#FFE14D; color:#1D2B2A;">✓</button>
+    <button class="btn-pen-color" data-color="#FF5A4F" style="background-color:#FF5A4F; color:#FFFFFF;"></button>
+    <button class="btn-pen-color" data-color="#FFFFFF" style="background-color:#FFFFFF; color:#1D2B2A;"></button>
+    <button class="btn-pen-color" data-color="#1D2B2A" style="background-color:#1D2B2A; color:#FFFFFF;"></button>
+    
+    <button class="btn-pen-width on" id="btn-pen-thin" data-width="3">ほそい</button>
+    <button class="btn-pen-width" id="btn-pen-thick" data-width="8">ふとい</button>
+
+    <button id="btn-eraser">🧽 けしゴム</button>
+    <button id="btn-clear-pen">🗑 ぜんぶ けす</button>
+    <button id="btn-pen-off">✕ ペンを おわる</button>
+  </div>
+
+  <!-- 1. スタート画面 -->
+  <div id="start-screen">
+    <div class="app-title">✂ めんせき ─ きって うごかして かんがえよう</div>
+    
+    <div class="section-title">たんげんの はじめ</div>
+    <div class="intro-card" id="btn-intro">
+      <div class="intro-card-thumbs" id="intro-thumbs"></div>
+      <div class="intro-card-text">いろいろな かたちを きって うごかして みよう</div>
+    </div>
+
+    <div class="section-title">かたちごとの べんきょう</div>
+    <div class="shape-grid" id="shape-grid"></div>
+  </div>
+
+  <!-- 2. 学習画面 -->
+  <div id="learn-screen" hidden>
+    <!-- 設定パネル -->
+    <div id="settings-panel" hidden>
+      <div class="settings-title">図形の大きさ(1ます = 1cm)</div>
+      <div id="settings-rows"></div>
+      
+      <!-- ステータス表示欄 -->
+      <div id="settings-status" class="settings-status info"></div>
+
+      <div class="settings-actions">
+        <button id="btn-delete-board">このページの ほぞんを けす</button>
+        <button id="btn-export-code-toggle">📋 はいふようの せっていコード</button>
+        <button id="btn-save-settings">この大きさで やりなおす</button>
+        <button id="btn-reset-settings">はじめの大きさに もどす</button>
+      </div>
+
+      <!-- コード表示欄 -->
+      <div id="code-export-area" class="code-export-area" hidden>
+        <div style="font-size:14px; font-weight:700;">HTML置きかえ用コード:このファイルの「const TEACHER_DEFAULTS = null;」の行を、下の1行に おきかえて 配布してください。</div>
+        <textarea id="code-export-textarea" readonly></textarea>
+        <div class="code-export-controls">
+          <button id="btn-copy-code" style="min-height:36px; padding:4px 12px; font-size:14px;">コピーする</button>
+          <span id="copy-status-msg" style="font-size:13px; font-weight:700; color:var(--accent-blue);"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作ボタン -->
+    <div class="controls-container">
+      <button id="btn-home">🏠 スタートへ</button>
+      <div class="control-group">
+        <button class="btn-main" id="btn-rotate">↻ まわす</button>
+        <button class="btn-main" id="btn-flip">⇆ うらがえす</button>
+        <button class="btn-main" id="btn-copy" title="＋ おなじのを もう1まい">＋ おなじの</button>
+        <button class="btn-sub" id="btn-add-original" title="🆕 もとの かたちを もう1まい">🆕 もとの かたち</button>
+        <div style="position:relative; display:inline-flex;">
+          <button class="btn-sub" id="btn-add-other" title="🔷 ほかの かたちを ふやす" hidden>🔷 ほかの かたち</button>
+          
+          <!-- ほかの図形選択ピッカー窓 -->
+          <div id="other-picker" class="other-picker-popover" hidden>
+            <button class="btn-picker-item" data-srcid="0">
+              <span class="picker-color-box" style="background-color:#F2A33A;"></span>へいこうしへんけい
+            </button>
+            <button class="btn-picker-item" data-srcid="1">
+              <span class="picker-color-box" style="background-color:#7CC4EE;"></span>ちょっかくさんかくけい
+            </button>
+            <button class="btn-picker-item" data-srcid="4">
+              <span class="picker-color-box" style="background-color:#F5F5F0;"></span>さんかくけい
+            </button>
+            <button class="btn-picker-item" data-srcid="2">
+              <span class="picker-color-box" style="background-color:#F3E65A;"></span>だいけい
+            </button>
+            <button class="btn-picker-item" data-srcid="3">
+              <span class="picker-color-box" style="background-color:#E79AC4;"></span>ひしがた
+            </button>
+            <button class="btn-picker-item" data-srcid="5">
+              <span class="picker-color-box" style="background-color:#B9A7F0;"></span>ちょうほうけい
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="control-group">
+        <button class="btn-sub" id="btn-save-board">💾 ほぞん</button>
+      </div>
+      <div class="control-group">
+        <button class="btn-main" id="btn-undo">↶ ひとつもどる</button>
+        <button id="btn-redo" class="disabled btn-sub">↷ ひとつすすむ</button>
+        <button class="btn-main" id="btn-pen">✏ ペン</button>
+      </div>
+      <div class="control-group control-group-reset">
+        <button class="btn-sub" id="btn-reset">⟲ さいしょから</button>
+      </div>
+    </div>
+
+    <div class="board-row" id="board-row">
+    <!-- キャンバスエリア -->
+    <div class="canvas-wrapper" id="canvas-wrapper">
+      <div id="board-viewport">
+        <canvas id="mainCanvas" width="1296" height="720"></canvas>
+        <button id="btn-reset-view" hidden>🔍 もとの おおきさ</button>
+      </div>
+      <div class="area-badge" id="area-badge" hidden></div>
+      <div class="board-toast" id="board-toast" role="status" aria-live="polite" hidden></div>
+
+      <!-- 図形削除メニュー (長押し・右クリック時) -->
+      <div id="shape-menu" class="shape-menu-popover" hidden>
+        <button class="btn-shape-menu-delete" id="btn-delete-shape">🗑 さくじょ</button>
+        <button class="btn-shape-menu-cancel" id="btn-close-shape-menu">やめる</button>
+      </div>
+    </div>
+
+    <!-- 画面下のバー(ボタン・タイトル・せってい) -->
+    <div class="bottom-bar" id="bottom-bar">
+    <div class="bottom-buttons">
+      <button class="btn-area" id="btn-toggle-area">📐 めんせきを しらべる</button>
+      <button class="btn-toggle-origin on" id="btn-toggle-origin">👻 もとの かたち</button>
+      <button class="btn-toggle-origin on" id="btn-toggle-ruler">📏 ものさし</button>
+      <button class="btn-save-image" id="btn-save-image">📷 がぞうで ほぞん</button>
+      <button class="btn-hint-toggle" id="btn-toggle-hint">💡 ヒント</button>
+    </div>
+    <h1 class="page-title" id="page-title">✂ めんせき</h1>
+    <button class="btn-settings-toggle" id="btn-settings-toggle">⚙ せってい</button>
+    </div>
+    </div>
+
+    <!-- ヒント窓 -->
+    <div id="hint-window" hidden>
+      <div class="hint-header" id="hint-header">
+        <div class="hint-title-area">
+          <span id="hint-window-title">⠿ 💡 ヒント</span>
+          <span class="hint-title-sub">(つかんで うごかせるよ)</span>
+        </div>
+        <button class="btn-close-hint" id="btn-close-hint">✕ とじる</button>
+      </div>
+      <div class="hint-body">
+        <div class="message-box" id="hint-message"></div>
+        
+        <div id="hint-shape-select-group">
+          <div class="hint-section-label">どの かたちの ヒント?</div>
+          <div class="hint-shape-btns" id="hint-shape-btns"></div>
+        </div>
+
+        <div>
+          <div class="hint-section-label">ヒントの レベル</div>
+          <div class="hint-level-btns">
+            <button class="btn-hint-level" data-level="1" style="background:#7CC4EE;">ヒント1 ★☆☆ かんがえかた</button>
+            <button class="btn-hint-level" data-level="2" style="background:#F3E65A;">ヒント2 ★★☆ そうさ</button>
+            <button class="btn-hint-level" data-level="3" id="btn-hint3" style="background:#F2A33A;">ヒント3 ★★★ あとひとおし</button>
+          </div>
+        </div>
+
+        <div class="hint-text-box" id="hint-text-box"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ヒント3の あいことば入力 -->
+  <div id="hint3-lock-overlay" hidden>
+    <div id="hint3-lock" role="dialog" aria-modal="true">
+      <div class="hl-title">🔒 ヒント3は せんせいが ひらくよ</div>
+      <div class="hl-sub">せんせいの あいことばを いれてね</div>
+      <div class="hl-dots" id="hl-dots"></div>
+      <div class="hl-msg" id="hl-msg"></div>
+      <div class="hl-pad" id="hl-pad"></div>
+      <button class="hl-close" id="hl-close">とじる</button>
+    </div>
+  </div>
+
+  <!-- 「さいしょから」の確認窓 -->
+  <div id="reset-confirm-overlay" hidden>
+    <div id="reset-confirm" role="dialog" aria-modal="true">
+      <div class="rc-title">ほんとうに さいしょから やりなおす?</div>
+      <div class="rc-sub">いま うごかした かたちや かいた せんは きえるよ。</div>
+      <div class="rc-btns">
+        <button id="btn-reset-no">やめる</button>
+        <button id="btn-reset-yes">⟲ やりなおす</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 大きさをきめるダイアログ (モーダル窓) -->
+  <div id="size-dialog-overlay" hidden>
+    <div id="size-dialog">
+      <div class="size-dialog-title" id="size-dialog-title">〇〇の おおきさを きめよう</div>
+      <div class="size-dialog-preview" id="size-dialog-preview"></div>
+      <div class="size-dialog-controls" id="size-dialog-controls"></div>
+      <div class="size-dialog-actions">
+        <button class="btn-size-add" id="btn-size-confirm">ふやす</button>
+        <div class="size-dialog-sub-actions">
+          <button class="btn-size-sub" id="btn-size-reset">はじめの おおきさに もどす</button>
+          <button class="btn-size-sub" id="btn-size-cancel">やめる</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==================================================
+       第0章・第4章 CFG 設定とデータ定義
+    ================================================== */
+    const TEACHER_DEFAULTS = null;
+
+    const CFG = {
+      // ★ ヒント3の あいことば(数字4けた)。授業ごとに 変えられます。
+      //   null にすると、ヒント3に かぎを かけません。
+      hint3Code: null,
+      W: 36,
+      H: 20,
+      S: 36,
+      copyShift: [2, 2],
+      introLayout: { startX: 1, startY: 2, gapX: 4, gapY: 5 },
+      introRect: { name: "長方形", color: "#B9A7F0", w: 6, h: 4 },
+      colors: [
+        "#F2A33A", "#7CC4EE", "#F3E65A", "#E79AC4",
+        "#F5F5F0", "#E8704A", "#B9A7F0", "#C7E39A"
+      ],
+      shapes: [
+        {
+          id: 0,
+          name: "平行四辺形",
+          color: "#F2A33A",
+          params: [
+            { key: "base", name: "底辺", val: 7, min: 2, max: 12 },
+            { key: "height", name: "高さ", val: 4, min: 2, max: 8 },
+            { key: "shift", name: "ななめのずれ", val: 2, min: 0, max: 6 }
+          ],
+          getVertices: (p) => [
+            [0, p.height],
+            [p.base, p.height],
+            [p.base + p.shift, 0],
+            [p.shift, 0]
+          ]
+        },
+        {
+          id: 1,
+          name: "直角三角形",
+          color: "#7CC4EE",
+          params: [
+            { key: "base", name: "底辺", val: 6, min: 2, max: 12 },
+            { key: "height", name: "高さ", val: 4, min: 2, max: 8 }
+          ],
+          getVertices: (p) => [
+            [0, p.height],
+            [p.base, p.height],
+            [0, 0]
+          ]
+        },
+        {
+          id: 2,
+          name: "台形",
+          color: "#F3E65A",
+          params: [
+            { key: "top", name: "上底", val: 3, min: 1, max: 12 },
+            { key: "bottom", name: "下底", val: 9, min: 2, max: 12 },
+            { key: "height", name: "高さ", val: 4, min: 2, max: 8 },
+            { key: "shift", name: "上底のずれ", val: 2, min: 0, max: 8 }
+          ],
+          getVertices: (p) => [
+            [0, p.height],
+            [p.bottom, p.height],
+            [p.shift + p.top, 0],
+            [p.shift, 0]
+          ]
+        },
+        {
+          id: 3,
+          name: "ひし形",
+          color: "#E79AC4",
+          params: [
+            { key: "w", name: "よこの対角線", val: 6, min: 2, max: 12 },
+            { key: "h", name: "たての対角線", val: 4, min: 2, max: 8 }
+          ],
+          getVertices: (p) => [
+            [p.w / 2, 0],
+            [p.w, p.h / 2],
+            [p.w / 2, p.h],
+            [0, p.h / 2]
+          ]
+        },
+        {
+          id: 4,
+          name: "一般の三角形",
+          color: "#F5F5F0",
+          params: [
+            { key: "base", name: "底辺", val: 6, min: 2, max: 12 },
+            { key: "height", name: "高さ", val: 4, min: 2, max: 8 },
+            { key: "topX", name: "頂点の位置", val: 2, min: 0, max: 12 }
+          ],
+          getVertices: (p) => [
+            [0, p.height],
+            [p.base, p.height],
+            [p.topX, 0]
+          ]
+        }
+      ]
+    };
+
+    const HINT_DATA = {
+      0: {
+        name: "へいこうしへんけい",
+        1: "しっている かたち(ちょうほうけい)に かえられないかな?",
+        2: "はしの ほうの ぶぶんを きって、はんたいがわに うごかしてみよう。",
+        3: "たかさの せんで きって、できた さんかくけいを はんたいがわに くっつけると、ちょうほうけいに なるよ。"
+      },
+      1: {
+        name: "ちょっかくさんかくけい",
+        1: "おなじ かたちが もう1まい あったら、どんな かたちが つくれるかな?",
+        2: "「おなじのを もう1まい」を おして、まわしたり うらがえしたりして あわせてみよう。",
+        3: "2まいを あわせると ちょうほうけいに なるよ。さんかくけい 1まいぶんは、その はんぶんだね。"
+      },
+      2: {
+        name: "だいけい",
+        1: "しっている かたちを 2まい あわせたら、できないかな?",
+        2: "「おなじのを もう1まい」を おして、うらがえして ならべてみよう。",
+        3: "2まいを あわせると へいこうしへんけいに なるよ。だいけい 1まいぶんは、その はんぶんだね。"
+      },
+      3: {
+        name: "ひしがた",
+        1: "たいかくせんで きると、どんな かたちが できるかな?",
+        2: "2ほんの たいかくせんで 4つに きって、ならべかえてみよう。",
+        3: "4つの ちょっかくさんかくけいを ならべかえると、ちょうほうけいに なるよ。"
+      },
+      4: {
+        name: "いっぱんの さんかくけい",
+        1: "ちょっかくさんかくけいに わけられないかな?",
+        2: "たかさの せんで きって、ちょっかくさんかくけいを 2つ つくってみよう。",
+        3: "2つの ちょっかくさんかくけいは、それぞれ ちょうほうけいの はんぶんだよ。あわせて かんがえよう。"
+      }
+    };
+
+    const BOARD_KEY = "menseki_board_v1";
+
+    function storageOK() {
+      try {
+        localStorage.setItem("menseki_test", "1");
+        localStorage.removeItem("menseki_test");
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function readBoards() {
+      try {
+        const o = JSON.parse(localStorage.getItem(BOARD_KEY));
+        if (o && o.version === 1 && o.pages && typeof o.pages === "object") return o;
+      } catch (e) {}
+      return { version: 1, pages: {} };
+    }
+
+    function paramsKey(page) {
+      return JSON.stringify(page === "intro" ? [shapeParams, CFG.introRect, CFG.introLayout] : shapeParams[page]);
+    }
+
+    function isValidBoard(b, page) {
+      const okPt = p => Array.isArray(p) && p.length === 2 && typeof p[0] === "number" && typeof p[1] === "number";
+      const okShape = s => s && typeof s.x === "number" && typeof s.y === "number" && typeof s.color === "string"
+        && Array.isArray(s.pts) && s.pts.length >= 3 && s.pts.every(okPt)
+        && (s.srcId === undefined || (typeof s.srcId === "number" && s.srcId >= 0 && s.srcId <= 5));
+      const okStroke = st => st && typeof st.color === "string" && typeof st.width === "number"
+        && Array.isArray(st.pts) && st.pts.every(okPt);
+
+      return b && b.paramsKey === paramsKey(page)
+        && Array.isArray(b.shapes) && b.shapes.length >= 0 && b.shapes.length <= 60 && b.shapes.every(okShape)
+        && Array.isArray(b.origins) && b.origins.every(o => o && typeof o.x === "number" && typeof o.y === "number" && Array.isArray(o.pts))
+        && typeof b.colorIndex === "number"
+        && (b.strokes === undefined || (Array.isArray(b.strokes) && b.strokes.every(okStroke)));
+    }
+
+    function isValidParams(parsed) {
+      if (!Array.isArray(parsed) || parsed.length !== 5) return false;
+      return parsed.every((sParams, sIdx) => {
+        if (!sParams || typeof sParams !== "object") return false;
+        return CFG.shapes[sIdx].params.every(p => {
+          const val = sParams[p.key];
+          return typeof val === "number" && !isNaN(val) && val >= p.min && val <= p.max;
+        });
+      });
+    }
+
+    function getDefaultParams() {
+      return JSON.parse(JSON.stringify(CFG.shapes.map(s => {
+        let res = {};
+        s.params.forEach(p => res[p.key] = p.val);
+        return res;
+      })));
+    }
+
+    let shapeParams = getDefaultParams();
+
+    function loadInitialParams() {
+      try {
+        const saved = localStorage.getItem("menseki_sizes_v2");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (isValidParams(parsed)) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn("localStorage アクセス不可:", e);
+      }
+
+      if (TEACHER_DEFAULTS && isValidParams(TEACHER_DEFAULTS)) {
+        return JSON.parse(JSON.stringify(TEACHER_DEFAULTS));
+      }
+
+      return getDefaultParams();
+    }
+
+    shapeParams = loadInitialParams();
+
+    /* ==================================================
+       アプリケーション状態
+    ================================================== */
+    let currentPage = "start";
+    let pageStates = {};
+
+    let currentShapes = [];
+    let originShapes = [];
+    let history = [];
+    let redoStack = [];
+    let selectedShapeId = null;
+    let showAreaBadge = false;
+    let showOrigin = true;
+    let showRuler = true;
+    let colorIndex = 5;
+    let currentMessage = "";
+
+    // ズーム・パン状態（修正A）
+    let viewScale = 1;
+    let viewTx = 0;
+    let viewTy = 0;
+    let touchPointers = new Map();
+    let pinchStartDist = 0;
+    let pinchStartScale = 1;
+    let pinchStartMid = { x: 0, y: 0 };
+    let pinchStartTx = 0;
+    let pinchStartTy = 0;
+
+    // ペン・書きこみ状態（修正B・C）
+    let isPenActive = false;
+    let penColor = "#FFE14D";
+    let penWidth = 3;
+    let isEraserActive = false;
+    let strokes = [];
+    let lastPenTime = 0;
+    let activeStroke = null;
+    let hasErasedInCurrentDrag = false;
+
+    // ヒント状態
+    let selectedHintShape = 0;
+    let selectedHintLevel = 1;
+
+    // 切断演出
+    let cutEffects = [];
+
+    // サイズ指定ダイアログ
+    let activeDialogSrcId = null;
+    let activeDialogParams = {};
+    let initialDialogParams = {};
+
+    // 長押しタイマー
+    let longPressTimer = null;
+    let longPressTargetShape = null;
+
+    // DOM 要素
+    const canvas = document.getElementById("mainCanvas");
+    const ctx = canvas.getContext("2d");
+    const boardViewport = document.getElementById("board-viewport");
+    const btnResetView = document.getElementById("btn-reset-view");
+
+    /* ズーム・パン（ビュー変換）ヘルパー */
+    function updateTransformCSS() {
+      canvas.style.transform = `translate(${viewTx}px, ${viewTy}px) scale(${viewScale})`;
+      btnResetView.hidden = (viewScale <= 1.01);
+    }
+
+    function resetView() {
+      viewScale = 1;
+      viewTx = 0;
+      viewTy = 0;
+      updateTransformCSS();
+    }
+
+    function clampView() {
+      const vRect = boardViewport.getBoundingClientRect();
+      const W = vRect.width;
+      const H = vRect.height;
+
+      const minTx = W * (1 - viewScale);
+      const minTy = H * (1 - viewScale);
+
+      viewTx = Math.max(minTx, Math.min(0, viewTx));
+      viewTy = Math.max(minTy, Math.min(0, viewTy));
+    }
+
+    /* 進行中の1本指操作を安全に取り消す */
+    function cancelActiveSingleTouchAction() {
+      clearLongPressTimer();
+
+      if (dragState) {
+        if (dragState.mode === "move" && dragState.shape) {
+          dragState.shape.x = dragState.origX;
+          dragState.shape.y = dragState.origY;
+        } else if (dragState.mode === "draw" && activeStroke) {
+          strokes.pop();
+          if (history.length > 0) history.pop(); // saveHistory() の巻き戻し
+          activeStroke = null;
+        } else if (dragState.mode === "cut") {
+          // 切断作業の中止
+        }
+        try { canvas.releasePointerCapture(dragState.pointerId); } catch (err) {}
+        dragState = null;
+      }
+    }
+
+    /* ==================================================
+       幾何計算・カラー選定ユーティリティ関数
+    ================================================== */
+    function pickNewColor(baseColor) {
+      const rgb = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16));
+      const dist = (a, b) => {
+        const x = rgb(a), y = rgb(b);
+        return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+      };
+      const used = new Set(currentShapes.map(s => s.color));
+      let pool = CFG.colors.filter(c => !used.has(c));
+      if (pool.length === 0) pool = CFG.colors.slice();
+      return pool.reduce((best, c) => dist(c, baseColor) > dist(best, baseColor) ? c : best, pool[0]);
+    }
+
+    const MAX_SHAPES = 60;
+    let lastShapeId = 0;
+    function newShapeId() {
+      lastShapeId = Math.max(Date.now(), lastShapeId + 1);
+      return lastShapeId;
+    }
+
+    /* かたちが 方眼の そとに 出ないように する */
+    function clampShapeToBoard(shape, loose) {
+      const xs = shape.pts.map(p => p[0]), ys = shape.pts.map(p => p[1]);
+      let loX = -Math.min(...xs), hiX = CFG.W - Math.max(...xs);
+      let loY = -Math.min(...ys), hiY = CFG.H - Math.max(...ys);
+      if (!loose) {
+        loX = Math.ceil(loX - 1e-9); hiX = Math.floor(hiX + 1e-9);
+        loY = Math.ceil(loY - 1e-9); hiY = Math.floor(hiY + 1e-9);
+      }
+      if (hiX >= loX) shape.x = Math.max(loX, Math.min(hiX, shape.x));
+      if (hiY >= loY) shape.y = Math.max(loY, Math.min(hiY, shape.y));
+    }
+
+    function calcPolygonArea(pts) {
+      let area = 0;
+      for (let i = 0; i < pts.length; i++) {
+        let j = (i + 1) % pts.length;
+        area += pts[i][0] * pts[j][1];
+        area -= pts[j][0] * pts[i][1];
+      }
+      return Math.abs(area) / 2;
+    }
+
+    function isPointInPolygon(pt, poly) {
+      let x = pt[0], y = pt[1];
+      let inside = false;
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        let xi = poly[i][0], yi = poly[i][1];
+        let xj = poly[j][0], yj = poly[j][1];
+        let intersect = ((yi > y) !== (yj > y)) &&
+          (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+
+    function lineIntersection(p1, p2, p3, p4) {
+      const d = (p1[0] - p2[0]) * (p3[1] - p4[1]) - (p1[1] - p2[1]) * (p3[0] - p4[0]);
+      if (Math.abs(d) < 1e-9) return null;
+      const t = ((p1[0] - p3[0]) * (p3[1] - p4[1]) - (p3[0] - p4[0]) * (p1[1] - p3[1])) / d;
+      const u = -((p1[0] - p2[0]) * (p1[1] - p3[1]) - (p1[1] - p2[1]) * (p1[0] - p3[0])) / d;
+      if (t >= -1e-7 && t <= 1 + 1e-7 && u >= -1e-7 && u <= 1 + 1e-7) {
+        return [
+          p1[0] + t * (p2[0] - p1[0]),
+          p1[1] + t * (p2[1] - p1[1])
+        ];
+      }
+      return null;
+    }
+
+    function distanceToSegment(pt, p1, p2) {
+      const x = pt[0], y = pt[1];
+      const x1 = p1[0], y1 = p1[1];
+      const x2 = p2[0], y2 = p2[1];
+
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      if (dx === 0 && dy === 0) return Math.hypot(x - x1, y - y1);
+
+      let t = ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy);
+      t = Math.max(0, Math.min(1, t));
+
+      const projX = x1 + t * dx;
+      const projY = y1 + t * dy;
+      return Math.hypot(x - projX, y - projY);
+    }
+
+    function slicePolygon(poly, lineP1, lineP2) {
+      const a = lineP2[1] - lineP1[1];
+      const b = lineP1[0] - lineP2[0];
+      const c = lineP2[0] * lineP1[1] - lineP1[0] * lineP2[1];
+
+      // なぞった線が 点に つぶれている ときは きらない
+      if (Math.hypot(a, b) < 1e-6) return [[], []];
+
+      function side(p) {
+        const val = a * p[0] + b * p[1] + c;
+        if (Math.abs(val) < 1e-7) return 0;
+        return val > 0 ? 1 : -1;
+      }
+
+      let poly1 = [];
+      let poly2 = [];
+
+      for (let i = 0; i < poly.length; i++) {
+        let j = (i + 1) % poly.length;
+        let pI = poly[i];
+        let pJ = poly[j];
+        let sI = side(pI);
+        let sJ = side(pJ);
+
+        if (sI >= 0) poly1.push(pI);
+        if (sI <= 0) poly2.push(pI);
+
+        if ((sI > 0 && sJ < 0) || (sI < 0 && sJ > 0)) {
+          let hit = lineIntersection(pI, pJ, lineP1, lineP2);
+          // なぞった線が この辺まで とどいていない(とちゅうで とまった)ときは きらない
+          if (!hit) return [[], []];
+          poly1.push(hit);
+          poly2.push(hit);
+        }
+      }
+
+      function cleanPoly(p) {
+        if (p.length < 3) return [];
+        let res = [];
+        for (let i = 0; i < p.length; i++) {
+          let prev = res[res.length - 1];
+          if (!prev || Math.hypot(p[i][0] - prev[0], p[i][1] - prev[1]) > 1e-4) {
+            res.push(p[i]);
+          }
+        }
+        if (res.length > 1 && Math.hypot(res[0][0] - res[res.length - 1][0], res[0][1] - res[res.length - 1][1]) < 1e-4) {
+          res.pop();
+        }
+        return res;
+      }
+
+      return [cleanPoly(poly1), cleanPoly(poly2)];
+    }
+
+    /* ==================================================
+       状態履歴の保存と復元
+    ================================================== */
+    function updateUndoRedoButtons() {
+      const btnRedo = document.getElementById("btn-redo");
+      if (btnRedo) {
+        btnRedo.classList.toggle("disabled", redoStack.length === 0);
+      }
+    }
+
+    function saveHistory() {
+      if (history.length >= 60) history.shift();
+      history.push(JSON.stringify({
+        shapes: currentShapes,
+        origins: originShapes,
+        strokes: strokes
+      }));
+      redoStack = [];
+      updateUndoRedoButtons();
+    }
+
+    let toastTimer = null;
+    function setMessage(msg, quiet) {
+      currentMessage = msg;
+      document.getElementById("hint-message").textContent = msg;
+      if (quiet) return;
+      // ヒント窓を とじていても 見えるように、方眼の 上にも 出す
+      const toast = document.getElementById("board-toast");
+      const hw = document.getElementById("hint-window");
+      if (!toast || !msg || (hw && !hw.hidden)) return;
+      toast.textContent = msg;
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.hidden = true; }, 4000);
+    }
+
+    /* ==================================================
+       描画ロジック
+    ================================================== */
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. 方眼線の描画
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(255,255,255,0.5)";
+      for (let x = 0; x <= CFG.W; x++) {
+        if (x % 5 === 0) continue;
+        ctx.beginPath();
+        ctx.moveTo(x * CFG.S, 0);
+        ctx.lineTo(x * CFG.S, CFG.H * CFG.S);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= CFG.H; y++) {
+        if (y % 5 === 0) continue;
+        ctx.beginPath();
+        ctx.moveTo(0, y * CFG.S);
+        ctx.lineTo(CFG.W * CFG.S, y * CFG.S);
+        ctx.stroke();
+      }
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(255,255,255,0.95)";
+      for (let x = 0; x <= CFG.W; x += 5) {
+        ctx.beginPath();
+        ctx.moveTo(x * CFG.S, 0);
+        ctx.lineTo(x * CFG.S, CFG.H * CFG.S);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= CFG.H; y += 5) {
+        ctx.beginPath();
+        ctx.moveTo(0, y * CFG.S);
+        ctx.lineTo(CFG.W * CFG.S, y * CFG.S);
+        ctx.stroke();
+      }
+
+      // 1.5. もとの形の描画
+      if (showOrigin && originShapes && originShapes.length > 0) {
+        originShapes.forEach(shape => {
+          ctx.save();
+          ctx.beginPath();
+          shape.pts.forEach((pt, idx) => {
+            let px = (shape.x + pt[0]) * CFG.S;
+            let py = (shape.y + pt[1]) * CFG.S;
+            if (idx === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          });
+          ctx.closePath();
+
+          ctx.fillStyle = "rgba(255,255,255,0.12)";
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(255,255,255,0.95)";
+          ctx.lineWidth = 3;
+          ctx.lineJoin = "round";
+          ctx.setLineDash([10, 8]);
+          ctx.stroke();
+
+          ctx.restore();
+        });
+      }
+
+      const now = Date.now();
+
+      // 2. 図形の描画
+      currentShapes.forEach(shape => {
+        const isSelected = (shape.id === selectedShapeId);
+
+        let isFlashing = false;
+        cutEffects.forEach(eff => {
+          if (eff.newShapeIds.includes(shape.id)) {
+            const elapsed = now - eff.startTime;
+            if (elapsed < 800) {
+              const cycle = Math.floor(elapsed / 200);
+              if (cycle % 2 === 0) {
+                isFlashing = true;
+              }
+            }
+          }
+        });
+
+        ctx.save();
+
+        ctx.beginPath();
+        shape.pts.forEach((pt, idx) => {
+          let px = (shape.x + pt[0]) * CFG.S;
+          let py = (shape.y + pt[1]) * CFG.S;
+          if (idx === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.closePath();
+
+        if (isSelected) {
+          ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+          ctx.shadowBlur = 12;
+          ctx.shadowOffsetX = 4;
+          ctx.shadowOffsetY = 4;
+        } else {
+          ctx.shadowColor = "rgba(0, 0, 0, 0.2)";
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetX = 2;
+          ctx.shadowOffsetY = 2;
+        }
+        ctx.fillStyle = shape.color;
+        ctx.fill();
+
+        ctx.shadowColor = "transparent";
+
+        ctx.save();
+        ctx.clip();
+
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(0,0,0,0.22)";
+        for (let x = 0; x <= CFG.W; x++) {
+          if (x % 5 === 0) continue;
+          ctx.beginPath();
+          ctx.moveTo(x * CFG.S, 0);
+          ctx.lineTo(x * CFG.S, CFG.H * CFG.S);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= CFG.H; y++) {
+          if (y % 5 === 0) continue;
+          ctx.beginPath();
+          ctx.moveTo(0, y * CFG.S);
+          ctx.lineTo(CFG.W * CFG.S, y * CFG.S);
+          ctx.stroke();
+        }
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(0,0,0,0.45)";
+        for (let x = 0; x <= CFG.W; x += 5) {
+          ctx.beginPath();
+          ctx.moveTo(x * CFG.S, 0);
+          ctx.lineTo(x * CFG.S, CFG.H * CFG.S);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= CFG.H; y += 5) {
+          ctx.beginPath();
+          ctx.moveTo(0, y * CFG.S);
+          ctx.lineTo(CFG.W * CFG.S, y * CFG.S);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        if (isSelected || isFlashing) {
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 9;
+          ctx.lineJoin = "round";
+          ctx.stroke();
+        }
+
+        ctx.strokeStyle = "#1d2b2a";
+        ctx.lineWidth = 3.5;
+        ctx.lineJoin = "round";
+        ctx.stroke();
+
+        ctx.restore();
+      });
+
+      // 2.5 ものさし (ルーラー) 描画
+      if (showRuler) {
+        drawRuler();
+      }
+
+      // 2.8 手書きの書きこみ 描画
+      drawStrokes();
+
+      // 切断演出
+      cutEffects = cutEffects.filter(eff => now - eff.startTime < 800);
+      cutEffects.forEach(eff => {
+        const elapsed = now - eff.startTime;
+        const alpha = Math.max(0, 1 - elapsed / 800);
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(eff.lineP1[0] * CFG.S, eff.lineP1[1] * CFG.S);
+        ctx.lineTo(eff.lineP2[0] * CFG.S, eff.lineP2[1] * CFG.S);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.lineWidth = 6;
+        ctx.lineCap = "round";
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      // 3. 切断操作中の点線 preview
+      if (dragState && dragState.mode === "cut") {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(dragState.startCanvasX, dragState.startCanvasY);
+        ctx.lineTo(dragState.currentCanvasX, dragState.currentCanvasY);
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 4;
+        ctx.setLineDash([8, 8]);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.font = "24px sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("✂", dragState.currentCanvasX + 10, dragState.currentCanvasY + 10);
+        ctx.restore();
+      }
+
+      // 4. 面積札更新
+      updateAreaBadge();
+
+      if (cutEffects.length > 0) {
+        requestAnimationFrame(draw);
+      }
+    }
+
+    function drawStrokes() {
+      if (!strokes || strokes.length === 0) return;
+
+      ctx.save();
+      strokes.forEach(st => {
+        if (!st.pts || st.pts.length === 0) return;
+
+        ctx.strokeStyle = st.color;
+        ctx.fillStyle = st.color;
+        ctx.lineWidth = st.width;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        if (st.pts.length === 1) {
+          const px = st.pts[0][0] * CFG.S;
+          const py = st.pts[0][1] * CFG.S;
+          ctx.beginPath();
+          ctx.arc(px, py, st.width / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (st.pts.length === 2) {
+          ctx.beginPath();
+          ctx.moveTo(st.pts[0][0] * CFG.S, st.pts[0][1] * CFG.S);
+          ctx.lineTo(st.pts[1][0] * CFG.S, st.pts[1][1] * CFG.S);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(st.pts[0][0] * CFG.S, st.pts[0][1] * CFG.S);
+          for (let i = 1; i < st.pts.length - 1; i++) {
+            const xc = (st.pts[i][0] + st.pts[i + 1][0]) / 2 * CFG.S;
+            const yc = (st.pts[i][1] + st.pts[i + 1][1]) / 2 * CFG.S;
+            ctx.quadraticCurveTo(st.pts[i][0] * CFG.S, st.pts[i][1] * CFG.S, xc, yc);
+          }
+          const lastIdx = st.pts.length - 1;
+          ctx.lineTo(st.pts[lastIdx][0] * CFG.S, st.pts[lastIdx][1] * CFG.S);
+          ctx.stroke();
+        }
+      });
+      ctx.restore();
+    }
+
+    function drawRuler() {
+      const rw = 32;
+      ctx.save();
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.fillRect(0, 0, rw, CFG.H * CFG.S);
+
+      ctx.strokeStyle = "#1d2b2a";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(rw, 0);
+      ctx.lineTo(rw, CFG.H * CFG.S);
+      ctx.stroke();
+
+      ctx.fillStyle = "#0b5e8e";
+      ctx.font = "bold 11px sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText("cm", 3, 10);
+
+      for (let k = 0; k <= CFG.H; k++) {
+        const y = k * CFG.S;
+        const is5 = (k % 5 === 0);
+        const tickLen = is5 ? 20 : 10;
+        const strokeWidth = is5 ? 2.5 : 1.5;
+
+        ctx.strokeStyle = "#1d2b2a";
+        ctx.lineWidth = strokeWidth;
+        ctx.beginPath();
+        ctx.moveTo(rw - tickLen, y);
+        ctx.lineTo(rw, y);
+        ctx.stroke();
+
+        if (is5 && k > 0) {
+          ctx.fillStyle = "#1d2b2a";
+          ctx.font = "bold 12px sans-serif";
+          ctx.textAlign = "left";
+
+          if (k === 20) {
+            ctx.textBaseline = "bottom";
+            ctx.fillText(String(k), 3, y - 2);
+          } else {
+            ctx.textBaseline = "top";
+            ctx.fillText(String(k), 3, y + 3);
+          }
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function updateAreaBadge() {
+      const badge = document.getElementById("area-badge");
+      if (!showAreaBadge) {
+        badge.hidden = true;
+        return;
+      }
+      badge.hidden = false;
+
+      if (selectedShapeId === null) {
+        badge.textContent = "かたちを タップすると めんせきが でるよ";
+      } else {
+        const shape = currentShapes.find(s => s.id === selectedShapeId);
+        if (shape) {
+          const area = calcPolygonArea(shape.pts);
+          // 小数は 3けたまで(0.5 や 1.875 などを 正しく 見せる)
+          const areaStr = String(parseFloat(area.toFixed(3)));
+          badge.innerHTML = `えらんだ かたちの めんせき: <b>${areaStr}</b> cm²<span style="font-size:16px;font-weight:normal;">(1ます = 1cm²)</span>`;
+        }
+      }
+    }
+
+    function getPos(e) {
+      const r = canvas.getBoundingClientRect();
+      const cx = (e.clientX - r.left) / r.width * canvas.width;
+      const cy = (e.clientY - r.top) / r.height * canvas.height;
+      return { cx, cy, mx: cx / CFG.S, my: cy / CFG.S };
+    }
+
+    function clearLongPressTimer() {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+      longPressTargetShape = null;
+    }
+
+    /* --------------------------------------------------
+       ピンチズーム＆マルチタッチイベント処理（修正A）
+    -------------------------------------------------- */
+    btnResetView.addEventListener("click", () => {
+      resetView();
+    });
+
+    boardViewport.addEventListener("touchstart", (e) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        touchPointers.set(t.identifier, { x: t.clientX, y: t.clientY });
+      }
+
+      if (touchPointers.size >= 2) {
+        cancelActiveSingleTouchAction();
+
+        const pts = Array.from(touchPointers.values());
+        pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        pinchStartScale = viewScale;
+        pinchStartMid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+        pinchStartTx = viewTx;
+        pinchStartTy = viewTy;
+      }
+    }, { passive: false });
+
+    boardViewport.addEventListener("touchmove", (e) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        if (touchPointers.has(t.identifier)) {
+          touchPointers.set(t.identifier, { x: t.clientX, y: t.clientY });
+        }
+      }
+
+      if (touchPointers.size >= 2 && pinchStartDist > 0) {
+        e.preventDefault(); // 画面スクロール防止
+
+        const pts = Array.from(touchPointers.values());
+        const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        const currentMid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+
+        let scale = pinchStartScale * (currentDist / pinchStartDist);
+        scale = Math.max(1, Math.min(4, scale));
+
+        const vRect = boardViewport.getBoundingClientRect();
+        const midRelX = pinchStartMid.x - vRect.left;
+        const midRelY = pinchStartMid.y - vRect.top;
+
+        let tx = midRelX - (midRelX - pinchStartTx) * (scale / pinchStartScale) + (currentMid.x - pinchStartMid.x);
+        let ty = midRelY - (midRelY - pinchStartTy) * (scale / pinchStartScale) + (currentMid.y - pinchStartMid.y);
+
+        viewScale = scale;
+        viewTx = tx;
+        viewTy = ty;
+
+        clampView();
+        updateTransformCSS();
+      }
+    }, { passive: false });
+
+    function handleTouchEnd(e) {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        touchPointers.delete(e.changedTouches[i].identifier);
+      }
+      if (touchPointers.size < 2) {
+        pinchStartDist = 0;
+      }
+    }
+
+    boardViewport.addEventListener("touchend", handleTouchEnd);
+    boardViewport.addEventListener("touchcancel", handleTouchEnd);
+
+    // トラックパッドのピンチ操作 (ctrl + wheel)
+    boardViewport.addEventListener("wheel", (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const vRect = boardViewport.getBoundingClientRect();
+        const mouseX = e.clientX - vRect.left;
+        const mouseY = e.clientY - vRect.top;
+
+        let zoomFactor = e.deltaY < 0 ? 1.05 : 0.95;
+        let newScale = Math.max(1, Math.min(4, viewScale * zoomFactor));
+
+        let tx = mouseX - (mouseX - viewTx) * (newScale / viewScale);
+        let ty = mouseY - (mouseY - viewTy) * (newScale / viewScale);
+
+        viewScale = newScale;
+        viewTx = tx;
+        viewTy = ty;
+
+        clampView();
+        updateTransformCSS();
+      }
+    }, { passive: false });
+
+    /* --------------------------------------------------
+       PointerEvents による操作 (ペン・移動・切断)
+    -------------------------------------------------- */
+    let dragState = null;
+
+    canvas.addEventListener("pointerdown", (e) => {
+      if (!shapeMenu.hidden) {
+        closeShapeMenu();
+        return;
+      }
+
+      const now = Date.now();
+      const isStylusPen = (e.pointerType === "pen");
+      const isEraserPenButton = (isStylusPen && ((e.buttons & 32) || e.button === 5));
+
+      if (isStylusPen) {
+        lastPenTime = now;
+      } else if (e.pointerType === "touch") {
+        if (touchPointers.size >= 2) return; // 2本指のピンチ中は単一操作を受け付けない
+        if (now - lastPenTime < 2500) return; // スタイラス直後の手のひら接触防止
+      }
+
+      // --- 修正B: スタイラスペンによる即時描画、またはペンモードオン時の描画 ---
+      if (isStylusPen || isPenActive) {
+        if (dragState && dragState.pointerId !== e.pointerId) {
+          // 2本目の指:かきかけの線を とりけして、ピンチ(かくだい)に ゆずる
+          if (e.pointerType === "touch") cancelActiveSingleTouchAction();
+          return;
+        }
+        canvas.setPointerCapture(e.pointerId);
+        const pos = getPos(e);
+
+        const useEraser = isEraserActive || isEraserPenButton;
+
+        if (useEraser) {
+          hasErasedInCurrentDrag = false;
+          eraseStrokeAt(pos.mx, pos.my);
+          dragState = { mode: "erase", pointerId: e.pointerId };
+        } else {
+          saveHistory();
+          activeStroke = {
+            color: penColor,
+            width: penWidth,
+            erase: false,
+            pts: [[pos.mx, pos.my]]
+          };
+          strokes.push(activeStroke);
+          if (strokes.length > 300) {
+            strokes.shift();
+          }
+          dragState = { mode: "draw", pointerId: e.pointerId };
+        }
+        draw();
+        return;
+      }
+
+      if (dragState) return;
+
+      canvas.setPointerCapture(e.pointerId);
+      const pos = getPos(e);
+
+      let hitShape = null;
+      for (let i = currentShapes.length - 1; i >= 0; i--) {
+        let s = currentShapes[i];
+        let localPt = [pos.mx - s.x, pos.my - s.y];
+        if (isPointInPolygon(localPt, s.pts)) {
+          hitShape = s;
+          break;
+        }
+      }
+
+      clearLongPressTimer();
+
+      if (hitShape) {
+        currentShapes = currentShapes.filter(s => s.id !== hitShape.id);
+        currentShapes.push(hitShape);
+        selectedShapeId = hitShape.id;
+
+        dragState = {
+          mode: "move",
+          pointerId: e.pointerId,
+          shape: hitShape,
+          startMouseX: pos.mx,
+          startMouseY: pos.my,
+          origX: hitShape.x,
+          origY: hitShape.y,
+          hasMoved: false
+        };
+
+        longPressTargetShape = hitShape;
+        longPressTimer = setTimeout(() => {
+          if (dragState && dragState.shape === longPressTargetShape && !dragState.hasMoved) {
+            dragState.shape.x = dragState.origX;
+            dragState.shape.y = dragState.origY;
+            const targetShape = dragState.shape;
+            dragState = null;
+            try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+            openShapeMenu(targetShape);
+          }
+          clearLongPressTimer();
+        }, 600);
+
+      } else {
+        selectedShapeId = null;
+        dragState = {
+          mode: "cut",
+          pointerId: e.pointerId,
+          startMx: pos.mx,
+          startMy: pos.my,
+          startCanvasX: pos.cx,
+          startCanvasY: pos.cy,
+          currentCanvasX: pos.cx,
+          currentCanvasY: pos.cy
+        };
+      }
+      draw();
+    });
+
+    function addPointToStroke(stroke, pos) {
+      if (!stroke || stroke.pts.length >= 4000) return;
+      const last = stroke.pts[stroke.pts.length - 1];
+      if (Math.hypot(pos.mx - last[0], pos.my - last[1]) >= 0.03) {
+        stroke.pts.push([pos.mx, pos.my]);
+      }
+    }
+
+    function eraseStrokeAt(mx, my) {
+      if (!strokes || strokes.length === 0) return;
+      const targetPt = [mx, my];
+      let erasedAny = false;
+
+      const isHit = st => {
+        if (!st.pts || st.pts.length === 0) return true;
+        let hit = false;
+        if (st.pts.length === 1) {
+          hit = Math.hypot(targetPt[0] - st.pts[0][0], targetPt[1] - st.pts[0][1]) <= 0.6;
+        } else {
+          for (let i = 0; i < st.pts.length - 1; i++) {
+            if (distanceToSegment(targetPt, st.pts[i], st.pts[i + 1]) <= 0.6) {
+              hit = true;
+              break;
+            }
+          }
+        }
+        return hit;
+      };
+
+      const hits = strokes.map(isHit);
+      erasedAny = hits.some(h => h);
+      if (!erasedAny) return;
+
+      // けす前の ようすを 履歴に のこす(1回の なぞりで 1つ)
+      if (!hasErasedInCurrentDrag) {
+        saveHistory();
+        hasErasedInCurrentDrag = true;
+      }
+      strokes = strokes.filter((st, i) => !hits[i]);
+    }
+
+    canvas.addEventListener("pointermove", (e) => {
+      const now = Date.now();
+      if (e.pointerType === "pen") {
+        lastPenTime = now;
+      } else if (e.pointerType === "touch") {
+        if (touchPointers.size >= 2) return;
+        if (now - lastPenTime < 2500) return;
+      }
+
+      if (!dragState || dragState.pointerId !== e.pointerId) return;
+
+      if (dragState.mode === "draw") {
+        const events = (e.getCoalescedEvents && e.getCoalescedEvents().length > 0) ? e.getCoalescedEvents() : [e];
+        events.forEach(ev => {
+          const pos = getPos(ev);
+          addPointToStroke(activeStroke, pos);
+        });
+        draw();
+        return;
+      }
+
+      if (dragState.mode === "erase") {
+        const events = (e.getCoalescedEvents && e.getCoalescedEvents().length > 0) ? e.getCoalescedEvents() : [e];
+        events.forEach(ev => {
+          const pos = getPos(ev);
+          eraseStrokeAt(pos.mx, pos.my);
+        });
+        draw();
+        return;
+      }
+
+      const pos = getPos(e);
+
+      if (dragState.mode === "move") {
+        const dx = pos.mx - dragState.startMouseX;
+        const dy = pos.my - dragState.startMouseY;
+        
+        if (Math.hypot(dx, dy) >= 0.3) {
+          dragState.hasMoved = true;
+          clearLongPressTimer();
+        }
+        dragState.shape.x = dragState.origX + dx;
+        dragState.shape.y = dragState.origY + dy;
+        clampShapeToBoard(dragState.shape, true);
+      } else if (dragState.mode === "cut") {
+        dragState.currentCanvasX = pos.cx;
+        dragState.currentCanvasY = pos.cy;
+      }
+      draw();
+    });
+
+    function handlePointerEnd(e) {
+      clearLongPressTimer();
+
+      if (!dragState || dragState.pointerId !== e.pointerId) return;
+
+      if (dragState.mode === "draw" || dragState.mode === "erase") {
+        dragState = null;
+        activeStroke = null;
+        draw();
+        return;
+      }
+
+      const pos = getPos(e);
+
+      if (dragState.mode === "move") {
+        const roundX = Math.round(dragState.shape.x);
+        const roundY = Math.round(dragState.shape.y);
+
+        dragState.shape.x = roundX;
+        dragState.shape.y = roundY;
+        clampShapeToBoard(dragState.shape);
+        const newX = dragState.shape.x, newY = dragState.shape.y;
+
+        if (dragState.hasMoved && (newX !== dragState.origX || newY !== dragState.origY)) {
+          // 履歴には「うごかす前」の位置を のこす
+          dragState.shape.x = dragState.origX;
+          dragState.shape.y = dragState.origY;
+          saveHistory();
+          dragState.shape.x = newX;
+          dragState.shape.y = newY;
+        } else {
+          dragState.shape.x = dragState.origX;
+          dragState.shape.y = dragState.origY;
+        }
+
+      } else if (dragState.mode === "cut") {
+        let startPt = [dragState.startMx, dragState.startMy];
+        let endPt = [pos.mx, pos.my];
+
+        if (Math.hypot(startPt[0] - endPt[0], startPt[1] - endPt[1]) > 0.2) {
+          function snapPoint(pt) {
+            let minDist = 0.7;
+            let bestSnap = null;
+            currentShapes.forEach(s => {
+              s.pts.forEach(p => {
+                let worldPt = [s.x + p[0], s.y + p[1]];
+                let d = Math.hypot(pt[0] - worldPt[0], pt[1] - worldPt[1]);
+                if (d < minDist) {
+                  minDist = d;
+                  bestSnap = worldPt;
+                }
+              });
+            });
+            if (bestSnap) return bestSnap;
+            return [Math.round(pt[0]), Math.round(pt[1])];
+          }
+
+          let lineP1 = snapPoint(startPt);
+          let lineP2 = snapPoint(endPt);
+
+          let targetShape = null;
+          let maxHits = 0;
+
+          currentShapes.forEach(s => {
+            let hits = 0;
+            const N = 40;
+            for (let i = 0; i <= N; i++) {
+              let t = i / N;
+              let px = startPt[0] + t * (endPt[0] - startPt[0]);
+              let py = startPt[1] + t * (endPt[1] - startPt[1]);
+              if (isPointInPolygon([px - s.x, py - s.y], s.pts)) {
+                hits++;
+              }
+            }
+            if (hits > maxHits) {
+              maxHits = hits;
+              targetShape = s;
+            }
+          });
+
+          if (!targetShape || maxHits < 2) {
+            setMessage("かたちの なかを とおるように なぞってね");
+          } else {
+            let localP1 = [lineP1[0] - targetShape.x, lineP1[1] - targetShape.y];
+            let localP2 = [lineP2[0] - targetShape.x, lineP2[1] - targetShape.y];
+
+            let [poly1, poly2] = slicePolygon(targetShape.pts, localP1, localP2);
+
+            let area1 = poly1.length >= 3 ? calcPolygonArea(poly1) : 0;
+            let area2 = poly2.length >= 3 ? calcPolygonArea(poly2) : 0;
+
+            if (poly1.length < 3 || poly2.length < 3 || area1 < 0.05 || area2 < 0.05) {
+              setMessage("そこでは きれないよ。かたちを よこぎるように なぞってね");
+            } else if (currentShapes.length >= MAX_SHAPES) {
+              setMessage("かたちが いっぱいだよ。これいじょうは きれないよ");
+            } else {
+              saveHistory();
+
+              const nextColor = pickNewColor(targetShape.color);
+
+              const id1 = newShapeId();
+              const id2 = newShapeId();
+
+              const newShape1 = {
+                id: id1,
+                srcId: targetShape.srcId,
+                pts: poly1,
+                x: targetShape.x,
+                y: targetShape.y,
+                color: targetShape.color
+              };
+              const newShape2 = {
+                id: id2,
+                srcId: targetShape.srcId,
+                pts: poly2,
+                x: targetShape.x,
+                y: targetShape.y,
+                color: nextColor
+              };
+
+              currentShapes = currentShapes.filter(s => s.id !== targetShape.id);
+              currentShapes.push(newShape1, newShape2);
+
+              selectedShapeId = null;
+
+              cutEffects.push({
+                lineP1: lineP1,
+                lineP2: lineP2,
+                startTime: Date.now(),
+                newShapeIds: [id1, id2]
+              });
+              requestAnimationFrame(draw);
+            }
+          }
+        }
+      }
+
+      dragState = null;
+      draw();
+    }
+
+    canvas.addEventListener("pointerup", handlePointerEnd);
+    canvas.addEventListener("pointercancel", handlePointerEnd);
+
+    canvas.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      if (isPenActive) return;
+
+      const pos = getPos(e);
+
+      let hitShape = null;
+      for (let i = currentShapes.length - 1; i >= 0; i--) {
+        let s = currentShapes[i];
+        let localPt = [pos.mx - s.x, pos.my - s.y];
+        if (isPointInPolygon(localPt, s.pts)) {
+          hitShape = s;
+          break;
+        }
+      }
+
+      if (hitShape) {
+        clearLongPressTimer();
+        if (dragState && dragState.mode !== "move") return;
+        if (dragState) {
+          dragState.shape.x = dragState.origX;
+          dragState.shape.y = dragState.origY;
+          try { canvas.releasePointerCapture(dragState.pointerId); } catch (err) {}
+          dragState = null;
+        }
+        selectedShapeId = hitShape.id;
+        openShapeMenu(hitShape);
+        draw();
+      }
+    });
+
+    /* --------------------------------------------------
+       ペンツールバー＆固定タブ制御（修正C）
+    -------------------------------------------------- */
+    const btnPen = document.getElementById("btn-pen");
+    const penTab = document.getElementById("pen-tab");
+    const btnPenOff = document.getElementById("btn-pen-off");
+    const btnEraser = document.getElementById("btn-eraser");
+    const btnPenThin = document.getElementById("btn-pen-thin");
+    const btnPenThick = document.getElementById("btn-pen-thick");
+
+    function togglePenMode(enable) {
+      isPenActive = (enable !== undefined) ? enable : !isPenActive;
+      btnPen.classList.toggle("on", isPenActive);
+      penTab.hidden = !isPenActive;
+      document.body.classList.toggle("pen-on", isPenActive);
+      canvas.classList.toggle("pen-active", isPenActive);
+      closeShapeMenu();
+    }
+
+    btnPen.addEventListener("click", () => togglePenMode());
+    btnPenOff.addEventListener("click", () => togglePenMode(false));
+
+    document.querySelectorAll(".btn-pen-color").forEach(btn => {
+      btn.addEventListener("click", () => {
+        isEraserActive = false;
+        btnEraser.classList.remove("on");
+
+        penColor = btn.dataset.color;
+        document.querySelectorAll(".btn-pen-color").forEach(b => {
+          b.classList.remove("selected");
+          b.textContent = "";
+        });
+        btn.classList.add("selected");
+        btn.textContent = "✓";
+      });
+    });
+
+    btnPenThin.addEventListener("click", () => {
+      isEraserActive = false;
+      btnEraser.classList.remove("on");
+      penWidth = 3;
+      btnPenThin.classList.add("on");
+      btnPenThick.classList.remove("on");
+    });
+
+    btnPenThick.addEventListener("click", () => {
+      isEraserActive = false;
+      btnEraser.classList.remove("on");
+      penWidth = 8;
+      btnPenThick.classList.add("on");
+      btnPenThin.classList.remove("on");
+    });
+
+    btnEraser.addEventListener("click", () => {
+      isEraserActive = !isEraserActive;
+      btnEraser.classList.toggle("on", isEraserActive);
+    });
+
+    document.getElementById("btn-clear-pen").addEventListener("click", () => {
+      if (!strokes || strokes.length === 0) {
+        setMessage("けす ものは ないよ");
+        return;
+      }
+      saveHistory();
+      strokes = [];
+      setMessage("かきこみを ぜんぶ けしたよ。まちがえたら「ひとつもどる」をおしてね");
+      draw();
+    });
+
+    /* 図形削除ポップアップメニュー制御 */
+    const shapeMenu = document.getElementById("shape-menu");
+    let menuTargetShapeId = null;
+
+    function openShapeMenu(shape) {
+      menuTargetShapeId = shape.id;
+      selectedShapeId = shape.id;
+
+      let avgX = shape.pts.reduce((sum, p) => sum + p[0], 0) / shape.pts.length;
+      let avgY = shape.pts.reduce((sum, p) => sum + p[1], 0) / shape.pts.length;
+      let centerX = (shape.x + avgX) * CFG.S;
+      let centerY = (shape.y + avgY) * CFG.S;
+
+      const cRect = canvas.getBoundingClientRect();
+      const scaleX = cRect.width / canvas.width;
+      const scaleY = cRect.height / canvas.height;
+
+      shapeMenu.hidden = false;
+
+      const menuWidth = shapeMenu.offsetWidth || 180;
+      const menuHeight = shapeMenu.offsetHeight || 60;
+
+      // かくだい・いどう中でも かたちの 上に 出るように、わくからの 位置で 計算する
+      const wRect = document.getElementById("canvas-wrapper").getBoundingClientRect();
+      let leftPx = (cRect.left - wRect.left) + centerX * scaleX - menuWidth / 2;
+      let topPx = (cRect.top - wRect.top) + centerY * scaleY - menuHeight / 2;
+
+      leftPx = Math.max(10, Math.min(leftPx, wRect.width - menuWidth - 10));
+      topPx = Math.max(10, Math.min(topPx, wRect.height - menuHeight - 10));
+
+      shapeMenu.style.left = leftPx + "px";
+      shapeMenu.style.top = topPx + "px";
+
+      draw();
+    }
+
+    function closeShapeMenu() {
+      shapeMenu.hidden = true;
+      menuTargetShapeId = null;
+    }
+
+    document.getElementById("btn-delete-shape").addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (menuTargetShapeId !== null) {
+        saveHistory();
+        currentShapes = currentShapes.filter(s => s.id !== menuTargetShapeId);
+        selectedShapeId = null;
+        setMessage("ずけいを さくじょしたよ。まちがえたら「ひとつもどる」をおしてね");
+        closeShapeMenu();
+        draw();
+      }
+    });
+
+    document.getElementById("btn-close-shape-menu").addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeShapeMenu();
+    });
+
+    document.addEventListener("click", (e) => {
+      // 方眼の わくの 中の クリックは canvas 側で とじるので、ここでは とじない
+      // (マウスの 長おしで ひらいた 直後に とじて しまうのを ふせぐ)
+      if (!shapeMenu.hidden && !document.getElementById("canvas-wrapper").contains(e.target)) {
+        closeShapeMenu();
+      }
+    });
+
+    /* 図形操作ボタン */
+    document.getElementById("btn-rotate").addEventListener("click", () => {
+      if (selectedShapeId === null) {
+        setMessage("さきに かたちを タップしてね");
+        return;
+      }
+      saveHistory();
+      const shape = currentShapes.find(s => s.id === selectedShapeId);
+
+      let avgX = shape.pts.reduce((sum, p) => sum + p[0], 0) / shape.pts.length;
+      let avgY = shape.pts.reduce((sum, p) => sum + p[1], 0) / shape.pts.length;
+      let px = Math.round(avgX);
+      let py = Math.round(avgY);
+
+      shape.pts = shape.pts.map(([x, y]) => [
+        px - (y - py),
+        py + (x - px)
+      ]);
+      clampShapeToBoard(shape);
+      draw();
+    });
+
+    document.getElementById("btn-flip").addEventListener("click", () => {
+      if (selectedShapeId === null) {
+        setMessage("さきに かたちを タップしてね");
+        return;
+      }
+      saveHistory();
+      const shape = currentShapes.find(s => s.id === selectedShapeId);
+
+      let avgX = shape.pts.reduce((sum, p) => sum + p[0], 0) / shape.pts.length;
+      let px = Math.round(avgX);
+
+      shape.pts = shape.pts.map(([x, y]) => [
+        2 * px - x,
+        y
+      ]).reverse();
+      clampShapeToBoard(shape);
+
+      draw();
+    });
+
+    document.getElementById("btn-copy").addEventListener("click", () => {
+      if (selectedShapeId === null) {
+        setMessage("コピーする かたちを さきに タップしてね");
+        return;
+      }
+      if (currentShapes.length >= MAX_SHAPES) {
+        setMessage("かたちが いっぱいだよ。これいじょうは ふやせないよ");
+        return;
+      }
+      saveHistory();
+      const shape = currentShapes.find(s => s.id === selectedShapeId);
+
+      const nextColor = pickNewColor(shape.color);
+
+      const copyShape = {
+        id: newShapeId(),
+        srcId: shape.srcId,
+        pts: JSON.parse(JSON.stringify(shape.pts)),
+        x: shape.x + CFG.copyShift[0],
+        y: shape.y + CFG.copyShift[1],
+        color: nextColor
+      };
+
+      clampShapeToBoard(copyShape);
+      currentShapes.push(copyShape);
+      selectedShapeId = copyShape.id;
+      setMessage("おなじ かたちが ふえたよ");
+      draw();
+    });
+
+    function addOriginalShape(srcId, customParams) {
+      if (currentShapes.length >= MAX_SHAPES) {
+        setMessage("かたちが いっぱいだよ。これいじょうは ふやせないよ");
+        return;
+      }
+      const isRect = (srcId === 5);
+      const sDef = isRect ? { name: CFG.introRect.name, color: CFG.introRect.color } : CFG.shapes[srcId];
+
+      let raw;
+      if (isRect) {
+        const w = customParams ? customParams.w : CFG.introRect.w;
+        const h = customParams ? customParams.h : CFG.introRect.h;
+        raw = [[0, 0], [w, 0], [w, h], [0, h]];
+      } else {
+        const p = customParams ? customParams : shapeParams[srcId];
+        raw = sDef.getVertices(p);
+      }
+
+      const minX = Math.min(...raw.map(p => p[0])), minY = Math.min(...raw.map(p => p[1]));
+      const pts = raw.map(([x, y]) => [x - minX, y - minY]);
+      const w = Math.max(...pts.map(p => p[0])), h = Math.max(...pts.map(p => p[1]));
+
+      const boxes = currentShapes.map(s => {
+        const xs = s.pts.map(p => s.x + p[0]), ys = s.pts.map(p => s.y + p[1]);
+        return { x1: Math.min(...xs), x2: Math.max(...xs), y1: Math.min(...ys), y2: Math.max(...ys) };
+      });
+      const isFree = (cx, cy) => boxes.every(b =>
+        cx + w + 1 <= b.x1 || cx - 1 >= b.x2 || cy + h + 1 <= b.y1 || cy - 1 >= b.y2);
+
+      let pos = null;
+      const first = originShapes.find(o => o.srcId === srcId);
+      if (first && isFree(first.x, first.y)) pos = [first.x, first.y];
+      for (let cy = 1; !pos && cy <= CFG.H - 1 - Math.ceil(h); cy++)
+        for (let cx = 1; !pos && cx <= CFG.W - 1 - Math.ceil(w); cx++)
+          if (isFree(cx, cy)) pos = [cx, cy];
+      if (!pos) pos = first ? [first.x, first.y] : [1, 1];
+
+      saveHistory();
+      const used = new Set(currentShapes.map(s => s.color));
+      const color = !used.has(sDef.color) ? sDef.color : pickNewColor(sDef.color);
+      const newShape = { id: newShapeId(), srcId, pts: JSON.parse(JSON.stringify(pts)), x: pos[0], y: pos[1], color };
+      clampShapeToBoard(newShape);
+      pos = [newShape.x, newShape.y];
+      currentShapes.push(newShape);
+      originShapes.push({ srcId, pts: JSON.parse(JSON.stringify(pts)), x: pos[0], y: pos[1] });
+      selectedShapeId = newShape.id;
+
+      if (customParams) {
+        let details = [];
+        if (isRect) {
+          details.push(`よこ${customParams.w}cm`, `たて${customParams.h}cm`);
+        } else {
+          sDef.params.forEach(p => {
+            details.push(`${p.name}${customParams[p.key]}cm`);
+          });
+        }
+        setMessage(`${sDef.name}を ${details.join(" ")} で ふやしたよ`);
+      } else {
+        setMessage(`${sDef.name}を ふやしたよ`);
+      }
+      draw();
+    }
+
+    document.getElementById("btn-add-original").addEventListener("click", () => {
+      let srcId;
+      if (currentPage === "intro") {
+        const sel = currentShapes.find(s => s.id === selectedShapeId);
+        if (!sel || sel.srcId === undefined) { setMessage("ふやしたい かたちを さきに タップしてね"); return; }
+        srcId = sel.srcId;
+      } else {
+        srcId = currentPage;
+      }
+      addOriginalShape(srcId);
+    });
+
+    const btnAddOther = document.getElementById("btn-add-other");
+    const otherPicker = document.getElementById("other-picker");
+
+    btnAddOther.addEventListener("click", (e) => {
+      e.stopPropagation();
+      otherPicker.hidden = !otherPicker.hidden;
+    });
+
+    document.querySelectorAll(".btn-picker-item").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const srcId = parseInt(btn.dataset.srcid, 10);
+        otherPicker.hidden = true;
+        openSizeDialog(srcId);
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!otherPicker.hidden && !otherPicker.contains(e.target) && e.target !== btnAddOther) {
+        otherPicker.hidden = true;
+      }
+    });
+
+    /* 大きさをきめるダイアログ */
+    const sizeDialogOverlay = document.getElementById("size-dialog-overlay");
+    const sizeDialogTitle = document.getElementById("size-dialog-title");
+    const sizeDialogPreview = document.getElementById("size-dialog-preview");
+    const sizeDialogControls = document.getElementById("size-dialog-controls");
+
+    function openSizeDialog(srcId) {
+      activeDialogSrcId = srcId;
+      const isRect = (srcId === 5);
+      const sDef = isRect ? { name: CFG.introRect.name } : CFG.shapes[srcId];
+
+      sizeDialogTitle.textContent = `${sDef.name}の おおきさを きめよう`;
+
+      if (isRect) {
+        initialDialogParams = { w: CFG.introRect.w, h: CFG.introRect.h };
+      } else {
+        initialDialogParams = JSON.parse(JSON.stringify(shapeParams[srcId]));
+      }
+      activeDialogParams = JSON.parse(JSON.stringify(initialDialogParams));
+
+      renderSizeDialogControls();
+      sizeDialogOverlay.hidden = false;
+    }
+
+    function closeSizeDialog() {
+      sizeDialogOverlay.hidden = true;
+      activeDialogSrcId = null;
+    }
+
+    function getParamDefs(srcId) {
+      if (srcId === 5) {
+        return [
+          { key: "w", name: "よこ", min: 2, max: 12 },
+          { key: "h", name: "たて", min: 2, max: 8 }
+        ];
+      }
+      return CFG.shapes[srcId].params;
+    }
+
+    function renderSizeDialogControls() {
+      if (activeDialogSrcId === null) return;
+
+      const paramDefs = getParamDefs(activeDialogSrcId);
+      sizeDialogControls.innerHTML = "";
+
+      paramDefs.forEach(p => {
+        const val = activeDialogParams[p.key];
+        const row = document.createElement("div");
+        row.className = "size-control-row";
+
+        const label = document.createElement("div");
+        label.className = "size-control-label";
+        label.textContent = p.name;
+
+        const btnGroup = document.createElement("div");
+        btnGroup.className = "size-control-buttons";
+
+        const btnMinus = document.createElement("button");
+        btnMinus.className = "btn-size-step";
+        btnMinus.textContent = "−";
+        btnMinus.disabled = (val <= p.min);
+        btnMinus.addEventListener("click", () => {
+          if (activeDialogParams[p.key] > p.min) {
+            activeDialogParams[p.key]--;
+            renderSizeDialogControls();
+          }
+        });
+
+        const valText = document.createElement("div");
+        valText.className = "size-control-value";
+        valText.textContent = `${val} cm`;
+
+        const btnPlus = document.createElement("button");
+        btnPlus.className = "btn-size-step";
+        btnPlus.textContent = "＋";
+        btnPlus.disabled = (val >= p.max);
+        btnPlus.addEventListener("click", () => {
+          if (activeDialogParams[p.key] < p.max) {
+            activeDialogParams[p.key]++;
+            renderSizeDialogControls();
+          }
+        });
+
+        btnGroup.appendChild(btnMinus);
+        btnGroup.appendChild(valText);
+        btnGroup.appendChild(btnPlus);
+
+        row.appendChild(label);
+        row.appendChild(btnGroup);
+        sizeDialogControls.appendChild(row);
+      });
+
+      renderSizeDialogPreview();
+    }
+
+    function renderSizeDialogPreview() {
+      if (activeDialogSrcId === null) return;
+
+      const srcId = activeDialogSrcId;
+      const isRect = (srcId === 5);
+      const color = isRect ? CFG.introRect.color : CFG.shapes[srcId].color;
+
+      let rawPts;
+      if (isRect) {
+        rawPts = [[0, 0], [activeDialogParams.w, 0], [activeDialogParams.w, activeDialogParams.h], [0, activeDialogParams.h]];
+      } else {
+        rawPts = CFG.shapes[srcId].getVertices(activeDialogParams);
+      }
+
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      rawPts.forEach(([x, y]) => {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      });
+
+      const w = maxX - minX;
+      const h = maxY - minY;
+
+      const pWidth = 260;
+      const pHeight = 160;
+      const margin = 16;
+
+      const scale = Math.min((pWidth - 2 * margin) / (w || 1), (pHeight - 2 * margin) / (h || 1));
+      const gridPx = scale;
+
+      const offsetX = (pWidth - w * scale) / 2 - minX * scale;
+      const offsetY = (pHeight - h * scale) / 2 - minY * scale;
+
+      const ptsStr = rawPts.map(([x, y]) => `${x * scale + offsetX},${y * scale + offsetY}`).join(" ");
+
+      let gridPattern = `<defs>
+        <pattern id="dialogGrid" width="${gridPx}" height="${gridPx}" patternUnits="userSpaceOnUse">
+          <path d="M ${gridPx} 0 L 0 0 0 ${gridPx}" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#dialogGrid)" />`;
+
+      sizeDialogPreview.innerHTML = `<svg width="${pWidth}" height="${pHeight}" viewBox="0 0 ${pWidth} ${pHeight}">
+        ${gridPattern}
+        <polygon points="${ptsStr}" fill="${color}" stroke="#1d2b2a" stroke-width="3" stroke-linejoin="round"/>
+      </svg>`;
+    }
+
+    document.getElementById("btn-size-confirm").addEventListener("click", () => {
+      if (activeDialogSrcId !== null) {
+        const srcId = activeDialogSrcId;
+        const customParams = JSON.parse(JSON.stringify(activeDialogParams));
+        closeSizeDialog();
+        addOriginalShape(srcId, customParams);
+      }
+    });
+
+    document.getElementById("btn-size-cancel").addEventListener("click", closeSizeDialog);
+
+    document.getElementById("btn-size-reset").addEventListener("click", () => {
+      activeDialogParams = JSON.parse(JSON.stringify(initialDialogParams));
+      renderSizeDialogControls();
+    });
+
+    sizeDialogOverlay.addEventListener("click", (e) => {
+      if (e.target === sizeDialogOverlay) {
+        closeSizeDialog();
+      }
+    });
+
+    document.getElementById("btn-toggle-area").addEventListener("click", (e) => {
+      showAreaBadge = !showAreaBadge;
+      e.currentTarget.classList.toggle("on", showAreaBadge);
+      draw();
+    });
+
+    document.getElementById("btn-toggle-origin").addEventListener("click", (e) => {
+      showOrigin = !showOrigin;
+      e.currentTarget.classList.toggle("on", showOrigin);
+      draw();
+    });
+
+    document.getElementById("btn-toggle-ruler").addEventListener("click", (e) => {
+      showRuler = !showRuler;
+      e.currentTarget.classList.toggle("on", showRuler);
+      draw();
+    });
+
+    /* 画像保存 */
+    document.getElementById("btn-save-image").addEventListener("click", (e) => {
+      closeShapeMenu();
+      const btn = e.currentTarget;
+      const originalText = "📷 がぞうで ほぞん";
+      const prevSel = selectedShapeId;
+      selectedShapeId = null; draw();
+      const HEADER = 64;
+      const off = document.createElement("canvas");
+      off.width = canvas.width; off.height = canvas.height + HEADER;
+      const octx = off.getContext("2d");
+      octx.fillStyle = "#ffffff"; octx.fillRect(0, 0, off.width, off.height);
+      octx.fillStyle = "#1d2b2a"; octx.font = "bold 30px sans-serif"; octx.textBaseline = "middle";
+      octx.fillText(document.getElementById("page-title").textContent, 20, HEADER / 2);
+      const d = new Date(), p2 = n => String(n).padStart(2, "0");
+      const dateStr = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+      octx.font = "24px sans-serif"; octx.textAlign = "right";
+      octx.fillText(dateStr, off.width - 20, HEADER / 2);
+      octx.fillStyle = "#2c6e63"; octx.fillRect(0, HEADER, canvas.width, canvas.height);
+      octx.drawImage(canvas, 0, HEADER);
+      selectedShapeId = prevSel; draw();
+
+      try {
+        // ファイル名は 英数字に する(日本語だと 名前が「download」に なる ブラウザが ある)
+        const PAGE_FILE_NAMES = ["heikoushihenkei", "chokkakusankakukei", "daikei", "hishigata", "sankakukei"];
+        let pageName = "hajime";
+        if (typeof currentPage === "number") {
+          pageName = PAGE_FILE_NAMES[currentPage] || ("shape" + currentPage);
+        }
+        const timeStr = `${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}`;
+        const fileName = `menseki_${pageName}_${timeStr}.png`;
+
+        off.toBlob((blob) => {
+          if (!blob) {
+            btn.textContent = "✕ ほぞんできなかったよ";
+            setTimeout(() => { btn.textContent = originalText; }, 2000);
+            return;
+          }
+          const done = (ok) => {
+            btn.textContent = ok ? "✓ ほぞんしたよ" : "✕ ほぞんできなかったよ";
+            setTimeout(() => { btn.textContent = originalText; }, 2000);
+          };
+          // 公開ページ(claude.ai)では、確認画面つきの保存を使う
+          if (window.claude && typeof window.claude.use === "function") {
+            window.claude.use("downloads").then((dl) => {
+              if (!dl) { done(false); return; }
+              dl.save({ filename: fileName, data: blob })
+                .then(() => done(true))
+                .catch((err) => {
+                  if (err && err.code === "declined") { btn.textContent = originalText; }
+                  else done(false);
+                });
+            }).catch(() => done(false));
+            return;
+          }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          // すぐに URL を すてると、ファイル名が きえる ブラウザが あるので すこし まつ
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+          btn.textContent = "✓ ほぞんしたよ";
+          setTimeout(() => { btn.textContent = originalText; }, 2000);
+        }, "image/png");
+      } catch (err) {
+        btn.textContent = "✕ ほぞんできなかったよ";
+        setTimeout(() => { btn.textContent = originalText; }, 2000);
+      }
+    });
+
+    /* ヒント窓 & ドラッグ移動ロジック */
+    const hintWindow = document.getElementById("hint-window");
+    const hintHeader = document.getElementById("hint-header");
+    const btnToggleHint = document.getElementById("btn-toggle-hint");
+
+    btnToggleHint.addEventListener("click", () => {
+      hintWindow.hidden = !hintWindow.hidden;
+      btnToggleHint.classList.toggle("on", !hintWindow.hidden);
+      if (!hintWindow.hidden) document.getElementById("board-toast").hidden = true;
+    });
+
+    document.getElementById("btn-close-hint").addEventListener("click", () => {
+      hintWindow.hidden = true;
+      btnToggleHint.classList.remove("on");
+    });
+
+    let hintDrag = null;
+    hintHeader.addEventListener("pointerdown", (e) => {
+      if (e.target.closest("#btn-close-hint")) return;
+      hintHeader.setPointerCapture(e.pointerId);
+      const rect = hintWindow.getBoundingClientRect();
+      hintDrag = {
+        pointerId: e.pointerId,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top
+      };
+    });
+
+    hintHeader.addEventListener("pointermove", (e) => {
+      if (!hintDrag || hintDrag.pointerId !== e.pointerId) return;
+      let left = e.clientX - hintDrag.offsetX;
+      let top = e.clientY - hintDrag.offsetY;
+
+      const maxLeft = window.innerWidth - hintWindow.offsetWidth;
+      const maxTop = window.innerHeight - hintWindow.offsetHeight;
+
+      left = Math.max(0, Math.min(left, maxLeft));
+      top = Math.max(0, Math.min(top, maxTop));
+
+      hintWindow.style.left = left + "px";
+      hintWindow.style.top = top + "px";
+      hintWindow.style.right = "auto";
+    });
+
+    const endHintDrag = (e) => {
+      if (hintDrag && hintDrag.pointerId === e.pointerId) hintDrag = null;
+    };
+    hintHeader.addEventListener("pointerup", endHintDrag);
+    hintHeader.addEventListener("pointercancel", endHintDrag);
+
+    function updateHintContent() {
+      const hint = HINT_DATA[selectedHintShape];
+      if (!hint) return;
+
+      const text = hint[selectedHintLevel];
+      const box = document.getElementById("hint-text-box");
+      box.textContent = text;
+
+      const bgColors = { 1: "#7CC4EE", 2: "#F3E65A", 3: "#F2A33A" };
+      box.style.backgroundColor = bgColors[selectedHintLevel];
+
+      document.querySelectorAll(".btn-hint-level").forEach(btn => {
+        btn.classList.toggle("on", parseInt(btn.dataset.level) === selectedHintLevel);
+      });
+      document.querySelectorAll(".btn-hint-shape").forEach(btn => {
+        btn.classList.toggle("on", parseInt(btn.dataset.shape) === selectedHintShape);
+      });
+    }
+
+    document.querySelectorAll(".btn-hint-level").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const lv = parseInt(btn.dataset.level);
+        if (lv === 3 && hint3Locked) { openHint3Lock(); return; }
+        selectedHintLevel = lv;
+        updateHintContent();
+      });
+    });
+
+    const hintShapeGroup = document.getElementById("hint-shape-btns");
+    CFG.shapes.forEach(s => {
+      const btn = document.createElement("button");
+      btn.className = "btn-hint-shape";
+      btn.dataset.shape = s.id;
+      btn.style.backgroundColor = s.color;
+      btn.textContent = HINT_DATA[s.id].name;
+      btn.addEventListener("click", () => {
+        selectedHintShape = s.id;
+        updateHintContent();
+      });
+      hintShapeGroup.appendChild(btn);
+    });
+
+    /* スタート画面の描画・カード生成 */
+    function createShapeSVG(shapeDef, width, height) {
+      const p = shapeParams[shapeDef.id];
+      const rawPts = shapeDef.getVertices(p);
+
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      rawPts.forEach(([x, y]) => {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      });
+
+      const w = maxX - minX;
+      const h = maxY - minY;
+      const margin = Math.round(Math.min(width, height) * 0.14);
+      const scale = Math.min((width - 2 * margin) / (w || 1), (height - 2 * margin) / (h || 1));
+
+      const offsetX = (width - w * scale) / 2 - minX * scale;
+      const offsetY = (height - h * scale) / 2 - minY * scale;
+
+      const ptsStr = rawPts.map(([x, y]) => `${x * scale + offsetX},${y * scale + offsetY}`).join(" ");
+
+      return `<svg width="${width}" height="${height}">
+        <polygon points="${ptsStr}" fill="${shapeDef.color}" stroke="#1d2b2a" stroke-width="2.5" stroke-linejoin="round"/>
+      </svg>`;
+    }
+
+    function initStartScreen() {
+      const thumbsContainer = document.getElementById("intro-thumbs");
+      thumbsContainer.innerHTML = "";
+      CFG.shapes.forEach(s => {
+        const div = document.createElement("div");
+        div.innerHTML = createShapeSVG(s, 84, 64);
+        thumbsContainer.appendChild(div);
+      });
+
+      const grid = document.getElementById("shape-grid");
+      grid.innerHTML = "";
+      const displayOrder = [0, 1, 4, 2, 3];
+      displayOrder.forEach(sId => {
+        const s = CFG.shapes[sId];
+        const card = document.createElement("div");
+        card.className = "shape-card";
+        card.innerHTML = `
+          <div class="shape-card-board">${createShapeSVG(s, 150, 110)}</div>
+          <div class="shape-card-name">${s.name}</div>
+        `;
+        card.addEventListener("click", () => openPage(s.id));
+        grid.appendChild(card);
+      });
+
+      document.getElementById("btn-intro").onclick = () => openPage("intro");
+    }
+
+    /* 先生用設定パネル */
+    const settingsPanel = document.getElementById("settings-panel");
+    const settingsStatus = document.getElementById("settings-status");
+    const codeExportArea = document.getElementById("code-export-area");
+
+    function updateSettingsStatusText() {
+      if (!storageOK()) {
+        showSettingsStatus("error", "✕ このひらきかたでは、ほぞんが できません。ダウンロードした HTML ファイルを、Chrome で ちょくせつ ひらいてね。");
+        return;
+      }
+      try {
+        const saved = localStorage.getItem("menseki_sizes_v2");
+        if (saved && isValidParams(JSON.parse(saved))) {
+          showSettingsStatus("info", "いまの しょきせってい: ほぞんした おおきさ");
+          return;
+        }
+      } catch (e) {}
+
+      showSettingsStatus("info", "いまの しょきせってい: はじめの おおきさ");
+    }
+
+    function showSettingsStatus(type, msg) {
+      settingsStatus.className = "settings-status " + type;
+      let symbol = "ℹ ";
+      if (type === "success") symbol = "✓ ";
+      if (type === "error") symbol = "✕ ";
+      settingsStatus.textContent = symbol + msg;
+    }
+
+    document.getElementById("btn-settings-toggle").addEventListener("click", () => {
+      const isHidden = settingsPanel.hidden;
+      settingsPanel.hidden = !isHidden;
+      if (isHidden) {
+        updateSettingsStatusText();
+        codeExportArea.hidden = true;
+        document.getElementById("copy-status-msg").textContent = "";
+      }
+    });
+
+    function renderSettingsRows() {
+      const container = document.getElementById("settings-rows");
+      container.innerHTML = "";
+
+      const targets = (currentPage === "intro") ? [0, 1, 2, 3, 4] : [currentPage];
+
+      targets.forEach(shapeId => {
+        const shapeDef = CFG.shapes[shapeId];
+        const row = document.createElement("div");
+        row.className = "settings-row";
+
+        let html = `<div class="settings-shape-name">${shapeDef.name}</div><div class="settings-inputs">`;
+        shapeDef.params.forEach(p => {
+          const currentVal = shapeParams[shapeId][p.key];
+          html += `
+            <label class="setting-field">
+              <span>${p.name}:</span>
+              <input type="number" id="cfg-input-${shapeId}-${p.key}" value="${currentVal}" min="${p.min}" max="${p.max}">
+            </label>
+          `;
+        });
+        html += `</div>`;
+        row.innerHTML = html;
+        container.appendChild(row);
+      });
+    }
+
+    document.getElementById("btn-delete-board").addEventListener("click", () => {
+      try {
+        const all = readBoards();
+        delete all.pages[String(currentPage)];
+        localStorage.setItem(BOARD_KEY, JSON.stringify(all));
+        showSettingsStatus("info", "このページの ほぞんを けしました。");
+      } catch (e) {
+        showSettingsStatus("error", "ほぞんの さくじょに しっぱいしました。");
+      }
+    });
+
+    // 「この大きさで やりなおす」ボタン
+    document.getElementById("btn-save-settings").addEventListener("click", () => {
+      const targets = (currentPage === "intro") ? [0, 1, 2, 3, 4] : [currentPage];
+
+      targets.forEach(shapeId => {
+        const shapeDef = CFG.shapes[shapeId];
+        shapeDef.params.forEach(p => {
+          const input = document.getElementById(`cfg-input-${shapeId}-${p.key}`);
+          if (input) {
+            let val = parseInt(input.value, 10);
+            if (isNaN(val)) val = p.val;
+            val = Math.max(p.min, Math.min(p.max, val));
+            shapeParams[shapeId][p.key] = val;
+          }
+        });
+      });
+
+      let saveSuccess = false;
+      try {
+        localStorage.setItem("menseki_sizes_v2", JSON.stringify(shapeParams));
+        // 大きさが かわった ページの ほぞんだけ けす
+        const all = readBoards();
+        delete all.pages[String(currentPage)];
+        delete all.pages["intro"];
+        localStorage.setItem(BOARD_KEY, JSON.stringify(all));
+        saveSuccess = true;
+      } catch (e) {
+        saveSuccess = false;
+      }
+
+      if (saveSuccess) {
+        showSettingsStatus("success", "ほぞんしました。つぎに ひらいたときも、この大きさで はじまります。");
+      } else {
+        showSettingsStatus("error", "このたんまつでは ほぞんできませんでした。したの「はいふようの せっていコード」を つかってね。");
+      }
+
+      delete pageStates[currentPage];
+      delete pageStates["intro"];
+      resetView();
+      strokes = [];
+      redoStack = [];
+      updateUndoRedoButtons();
+      renderSettingsRows();
+      initPageShapes(currentPage);
+      setMessage("ずけいの おおきさを かえたよ");
+      initStartScreen();
+      updateCodeExportTextarea();
+    });
+
+    // 「はじめの大きさに もどす」ボタン
+    document.getElementById("btn-reset-settings").addEventListener("click", () => {
+      try {
+        localStorage.removeItem("menseki_sizes_v2");
+        localStorage.removeItem(BOARD_KEY);
+      } catch (e) {}
+
+      if (TEACHER_DEFAULTS && isValidParams(TEACHER_DEFAULTS)) {
+        shapeParams = JSON.parse(JSON.stringify(TEACHER_DEFAULTS));
+      } else {
+        shapeParams = getDefaultParams();
+      }
+
+      showSettingsStatus("info", "はじめの大きさに もどしました。");
+      pageStates = {};
+      resetView();
+      strokes = [];
+      redoStack = [];
+      updateUndoRedoButtons();
+      renderSettingsRows();
+      initPageShapes(currentPage);
+      setMessage("はじめの おおきさに もどしたよ");
+      initStartScreen();
+      updateCodeExportTextarea();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (!sizeDialogOverlay.hidden) closeSizeDialog();
+        if (!shapeMenu.hidden) closeShapeMenu();
+        if (!otherPicker.hidden) otherPicker.hidden = true;
+        document.getElementById("hint3-lock-overlay").hidden = true;
+        document.getElementById("reset-confirm-overlay").hidden = true;
+      }
+
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+      if (activeTag === "input" || activeTag === "textarea") return;
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        if (e.key.toLowerCase() === "z" && !e.shiftKey) {
+          e.preventDefault();
+          doUndo();
+        } else if (e.key.toLowerCase() === "y" || (e.key.toLowerCase() === "z" && e.shiftKey)) {
+          e.preventDefault();
+          doRedo();
+        }
+      }
+    });
+
+    document.getElementById("btn-save-board").addEventListener("click", (e) => {
+      const btn = e.currentTarget, label = "💾 ほぞん";
+      const flash = t => { btn.textContent = t; setTimeout(() => { btn.textContent = label; }, 2500); };
+      try {
+        const all = readBoards();
+        all.pages[String(currentPage)] = {
+          savedAt: Date.now(), paramsKey: paramsKey(currentPage),
+          shapes: currentShapes, origins: originShapes, colorIndex: colorIndex,
+          strokes: strokes
+        };
+        localStorage.setItem(BOARD_KEY, JSON.stringify(all));
+        flash("✓ ほぞんしたよ");
+      } catch (err) { flash("✕ このひらきかたでは ほぞんできません"); }
+    });
+
+    function doUndo() {
+      if (history.length === 0) {
+        setMessage("もう もどせないよ");
+        return;
+      }
+      if (redoStack.length >= 60) redoStack.shift();
+      redoStack.push(JSON.stringify({
+        shapes: currentShapes,
+        origins: originShapes,
+        strokes: strokes
+      }));
+
+      const snap = JSON.parse(history.pop());
+      if (snap) {
+        if (snap.shapes !== undefined) currentShapes = snap.shapes;
+        if (snap.origins !== undefined) originShapes = snap.origins || [];
+        if (snap.strokes !== undefined) strokes = snap.strokes || [];
+      }
+      selectedShapeId = null;
+      closeShapeMenu();
+      updateUndoRedoButtons();
+      draw();
+    }
+
+    function doRedo() {
+      if (redoStack.length === 0) {
+        setMessage("もう すすめないよ");
+        return;
+      }
+      if (history.length >= 60) history.shift();
+      history.push(JSON.stringify({
+        shapes: currentShapes,
+        origins: originShapes,
+        strokes: strokes
+      }));
+
+      const snap = JSON.parse(redoStack.pop());
+      if (snap) {
+        if (snap.shapes !== undefined) currentShapes = snap.shapes;
+        if (snap.origins !== undefined) originShapes = snap.origins || [];
+        if (snap.strokes !== undefined) strokes = snap.strokes || [];
+      }
+      selectedShapeId = null;
+      closeShapeMenu();
+      updateUndoRedoButtons();
+      draw();
+    }
+
+    document.getElementById("btn-undo").addEventListener("click", doUndo);
+    document.getElementById("btn-redo").addEventListener("click", doRedo);
+
+    document.getElementById("btn-reset").addEventListener("click", () => {
+      closeShapeMenu();
+      resetView();
+      strokes = [];
+      redoStack = [];
+      updateUndoRedoButtons();
+      initPageShapes(currentPage);
+    });
+
+    function updateCodeExportTextarea() {
+      document.getElementById("code-export-textarea").value =
+        "const TEACHER_DEFAULTS = " + JSON.stringify(shapeParams) + ";";
+    }
+
+    document.getElementById("btn-export-code-toggle").addEventListener("click", () => {
+      codeExportArea.hidden = !codeExportArea.hidden;
+      document.getElementById("copy-status-msg").textContent = "";
+      if (!codeExportArea.hidden) updateCodeExportTextarea();
+    });
+
+    document.getElementById("btn-copy-code").addEventListener("click", () => {
+      const textarea = document.getElementById("code-export-textarea");
+      const statusMsg = document.getElementById("copy-status-msg");
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textarea.value).then(() => {
+          statusMsg.textContent = "✓ コピーしました！";
+        }).catch(() => {
+          textarea.select();
+          statusMsg.textContent = "全選択して Ctrl+C を おしてね";
+        });
+      } else {
+        textarea.select();
+        statusMsg.textContent = "全選択して Ctrl+C を おしてね";
+      }
+    });
+
+    /* ページ初期化・切り替え */
+    function initPageShapes(page) {
+      currentShapes = [];
+      history = [];
+      selectedShapeId = null;
+      colorIndex = 5;
+      cutEffects = [];
+
+      if (page === "intro") {
+        const L = CFG.introLayout;
+        let curX = L.startX;
+        let curY = L.startY;
+        let rowMaxH = 0;
+
+        const introList = CFG.shapes.map((sDef, idx) => ({ idx, color: sDef.color, rawPts: sDef.getVertices(shapeParams[idx]) }));
+        const R = CFG.introRect;
+        introList.push({ idx: 5, color: R.color, rawPts: [[0, 0], [R.w, 0], [R.w, R.h], [0, R.h]] });
+
+        introList.forEach(({ idx, color, rawPts }) => {
+          let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+          rawPts.forEach(([x, y]) => {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          });
+          const w = maxX - minX;
+          const h = maxY - minY;
+
+          const normPts = rawPts.map(([x, y]) => [x - minX, y - minY]);
+
+          if (curX + w > CFG.W - 1) {
+            curX = L.startX;
+            curY += rowMaxH + L.gapY;
+            rowMaxH = 0;
+          }
+
+          currentShapes.push({
+            id: idx,
+            srcId: idx,
+            pts: normPts,
+            x: curX,
+            y: curY,
+            color: color
+          });
+
+          curX += Math.ceil(w) + L.gapX;
+          if (h > rowMaxH) rowMaxH = Math.ceil(h);
+        });
+
+        setMessage("かたちは ひっぱると うごくよ。なにも ない ところから なぞると きれるよ。");
+
+      } else if (typeof page === "number") {
+        const sDef = CFG.shapes[page];
+        const p = shapeParams[page];
+        const rawPts = sDef.getVertices(p);
+
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        rawPts.forEach(([x, y]) => {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        });
+        const h = maxY - minY;
+        const normPts = rawPts.map(([x, y]) => [x - minX, y - minY]);
+
+        const startY = Math.round((CFG.H - h) / 2);
+
+        currentShapes.push({
+          id: page,
+          srcId: page,
+          pts: normPts,
+          x: 4,
+          y: startY,
+          color: sDef.color
+        });
+
+        setMessage("かたちを きったり うごかしたり して、めんせきの もとめかたを かんがえよう。なにも ない ところから なぞると きれるよ。");
+      }
+
+      originShapes = currentShapes.map(s => ({ srcId: s.srcId, pts: JSON.parse(JSON.stringify(s.pts)), x: s.x, y: s.y }));
+
+      draw();
+    }
+
+    function openPage(page) {
+      closeShapeMenu();
+      resetView();
+      redoStack = [];
+      updateUndoRedoButtons();
+
+      if (currentPage !== "start") {
+        pageStates[currentPage] = {
+          shapes: JSON.parse(JSON.stringify(currentShapes)),
+          history: JSON.parse(JSON.stringify(history)),
+          selectedShapeId,
+          showAreaBadge,
+          colorIndex,
+          currentMessage,
+          originShapes: JSON.parse(JSON.stringify(originShapes)),
+          strokes: JSON.parse(JSON.stringify(strokes))
+        };
+      }
+
+      currentPage = page;
+      window.scrollTo(0, 0);
+
+      const startScreen = document.getElementById("start-screen");
+      const learnScreen = document.getElementById("learn-screen");
+
+      if (page === "start") {
+        startScreen.hidden = false;
+        learnScreen.hidden = true;
+        togglePenMode(false);
+        return;
+      }
+
+      startScreen.hidden = true;
+      learnScreen.hidden = false;
+      settingsPanel.hidden = true;
+      hintWindow.hidden = true;
+      btnToggleHint.classList.remove("on");
+      otherPicker.hidden = true;
+      closeSizeDialog();
+
+      btnAddOther.hidden = (page === "intro");
+
+      const pageTitle = document.getElementById("page-title");
+      if (page === "intro") {
+        pageTitle.textContent = "✂ めんせき ─ きって うごかして かんがえよう";
+      } else {
+        pageTitle.textContent = `✂ ${CFG.shapes[page].name} ─ めんせきの もとめかた`;
+      }
+
+      const hintShapeGroup = document.getElementById("hint-shape-select-group");
+      const hintWinTitle = document.getElementById("hint-window-title");
+
+      if (page === "intro") {
+        hintShapeGroup.hidden = false;
+        hintWinTitle.textContent = "⠿ 💡 ヒント";
+        selectedHintShape = 0;
+      } else {
+        hintShapeGroup.hidden = true;
+        hintWinTitle.textContent = `⠿ 💡 ヒント ─ ${CFG.shapes[page].name}`;
+        selectedHintShape = page;
+      }
+      selectedHintLevel = 1;
+      updateHintContent();
+
+      renderSettingsRows();
+
+      if (pageStates[page]) {
+        const state = pageStates[page];
+        currentShapes = JSON.parse(JSON.stringify(state.shapes));
+        currentShapes.forEach(s => {
+          if (s.srcId === undefined) {
+            s.srcId = (typeof page === "number") ? page : s.id;
+          }
+        });
+        history = JSON.parse(JSON.stringify(state.history));
+        selectedShapeId = state.selectedShapeId;
+        showAreaBadge = state.showAreaBadge;
+        colorIndex = state.colorIndex;
+        originShapes = state.originShapes ? JSON.parse(JSON.stringify(state.originShapes)) : [];
+        originShapes.forEach(o => {
+          if (o.srcId === undefined) {
+            o.srcId = (typeof page === "number") ? page : 0;
+          }
+        });
+        strokes = state.strokes ? JSON.parse(JSON.stringify(state.strokes)) : [];
+        setMessage("つづきから はじめるよ。さいしょからに したい ときは「さいしょから」を おしてね");
+        document.getElementById("btn-toggle-area").classList.toggle("on", showAreaBadge);
+        draw();
+      } else {
+        showAreaBadge = false;
+        strokes = [];
+        document.getElementById("btn-toggle-area").classList.remove("on");
+        const saved = readBoards().pages[String(page)];
+        if (saved && isValidBoard(saved, page)) {
+          currentShapes = JSON.parse(JSON.stringify(saved.shapes));
+          originShapes  = JSON.parse(JSON.stringify(saved.origins));
+          strokes       = saved.strokes ? JSON.parse(JSON.stringify(saved.strokes)) : [];
+          colorIndex = saved.colorIndex; history = []; selectedShapeId = null; cutEffects = [];
+          setMessage("ほぞんした つづきから はじめるよ。さいしょからに したい ときは「さいしょから」を おしてね");
+          draw();
+        } else {
+          initPageShapes(page);
+        }
+      }
+    }
+
+    document.getElementById("btn-home").addEventListener("click", () => {
+      openPage("start");
+    });
+
+    window.onload = () => {
+      initStartScreen();
+      openPage("start");
+    };
+
+    /* ==================================================
+       ヒント3の かぎ(ページを ひらきなおすと また かかる)
+    ================================================== */
+    var hint3Locked = !!CFG.hint3Code;
+    let hl_input = "";
+    const hlOverlay = document.getElementById("hint3-lock-overlay");
+    const hlDots = document.getElementById("hl-dots");
+    const hlMsg = document.getElementById("hl-msg");
+    const btnHint3 = document.getElementById("btn-hint3");
+
+    function refreshHint3Button() {
+      btnHint3.classList.toggle("locked", hint3Locked);
+      btnHint3.textContent = hint3Locked
+        ? "🔒 ヒント3 (せんせいが ひらくよ)"
+        : "ヒント3 ★★★ あとひとおし";
+    }
+    function hlRender() {
+      const n = String(CFG.hint3Code || "").length;
+      hlDots.textContent = "●".repeat(hl_input.length) + "○".repeat(Math.max(0, n - hl_input.length));
+    }
+    function openHint3Lock() {
+      hl_input = ""; hlMsg.textContent = ""; hlRender();
+      hlOverlay.hidden = false;
+    }
+    function closeHint3Lock() { hlOverlay.hidden = true; }
+
+    (function buildPad() {
+      const pad = document.getElementById("hl-pad");
+      ["1","2","3","4","5","6","7","8","9","けす","0","⌫"].forEach(k => {
+        const b = document.createElement("button");
+        b.textContent = k;
+        if (k === "けす") b.style.fontSize = "17px";
+        b.addEventListener("click", () => {
+          const code = String(CFG.hint3Code);
+          if (k === "けす") hl_input = "";
+          else if (k === "⌫") hl_input = hl_input.slice(0, -1);
+          else if (hl_input.length < code.length) hl_input += k;
+          hlMsg.textContent = "";
+          hlRender();
+          if (hl_input.length === code.length) {
+            if (hl_input === code) {
+              hint3Locked = false;
+              refreshHint3Button();
+              closeHint3Lock();
+              selectedHintLevel = 3;
+              updateHintContent();
+            } else {
+              hlMsg.textContent = "ちがうみたい。もういちど いれてね";
+              hl_input = "";
+              setTimeout(hlRender, 400);
+            }
+          }
+        });
+        pad.appendChild(b);
+      });
+    })();
+    document.getElementById("hl-close").addEventListener("click", closeHint3Lock);
+    hlOverlay.addEventListener("click", (e) => { if (e.target === hlOverlay) closeHint3Lock(); });
+    refreshHint3Button();
+
+    /* ==================================================
+       「さいしょから」は 確認してから
+    ================================================== */
+    (function () {
+      const btn = document.getElementById("btn-reset");
+      const overlay = document.getElementById("reset-confirm-overlay");
+      let confirmed = false;
+      // 先に受け取って、確認がすむまで 止める
+      document.addEventListener("click", (e) => {
+        if (e.target.closest && e.target.closest("#btn-reset")) {
+          if (confirmed) { confirmed = false; return; }
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          overlay.hidden = false;
+        }
+      }, true);
+      document.getElementById("btn-reset-no").addEventListener("click", () => { overlay.hidden = true; });
+      overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.hidden = true; });
+      document.getElementById("btn-reset-yes").addEventListener("click", () => {
+        overlay.hidden = true;
+        confirmed = true;
+        btn.click();
+      });
+    })();
+
+    /* ==================================================
+       方眼を 画面の高さに あわせる(スクロールしなくて よいように)
+    ================================================== */
+    (function () {
+      const row = document.getElementById("board-row");
+      const wrap = document.getElementById("canvas-wrapper");
+      const bottom = document.getElementById("bottom-bar");
+      const ratio = canvas.width / canvas.height;
+      let lastKey = "";
+
+      function fitBoard() {
+        if (document.getElementById("learn-screen").hidden) return;
+        const rowTop = row.getBoundingClientRect().top + window.scrollY;
+        const bodyPadBottom = 8;
+        // 16 = 方眼のふち(上下)、8 = 下のバーとの すきま
+        let availH = window.innerHeight - rowTop - bodyPadBottom - 16 - 8 - bottom.getBoundingClientRect().height;
+        let availW = row.clientWidth - 16;
+        let w = Math.min(availW, availH * ratio);
+        w = Math.max(w, Math.min(availW, 480)); // 小さくなりすぎないように
+        const key = Math.round(w) + "";
+        if (key !== lastKey) {
+          lastKey = key;
+          wrap.style.width = Math.round(w) + "px";
+          if (typeof clampView === "function") { clampView(); updateTransformCSS(); }
+          if (typeof draw === "function") draw();
+        }
+      }
+
+      window.addEventListener("resize", fitBoard);
+      document.body.addEventListener("transitionend", (e) => { if (e.target === document.body) fitBoard(); });
+      window.addEventListener("orientationchange", () => setTimeout(fitBoard, 200));
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => fitBoard());
+        document.querySelectorAll("#learn-screen > .controls-container, #settings-panel, #learn-screen, #bottom-bar")
+          .forEach(el => ro.observe(el));
+      }
+      new MutationObserver(() => requestAnimationFrame(fitBoard))
+        .observe(document.body, { attributes: true, attributeFilter: ["class"] });
+      new MutationObserver(() => requestAnimationFrame(fitBoard))
+        .observe(document.getElementById("learn-screen"), { attributes: true, attributeFilter: ["hidden"] });
+      fitBoard();
+    })();
+  </script>
+</body>
+</html>
